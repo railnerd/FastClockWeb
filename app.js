@@ -148,6 +148,7 @@
     elements.hourHandGroup = document.getElementById('hourHandGroup');
     elements.minuteHandGroup = document.getElementById('minuteHandGroup');
     elements.secondHandGroup = document.getElementById('secondHandGroup');
+    elements.analogStoppedBadge = document.getElementById('analogStoppedBadge');
 
     // Digital Digits
     elements.digHours = document.getElementById('digHours');
@@ -159,6 +160,9 @@
     elements.syncStatusSummary = document.getElementById('syncStatusSummary');
     elements.rateBadge = document.getElementById('rateBadge');
     elements.clockRateText = document.getElementById('clockRateText');
+    elements.clockStatePill = document.getElementById('clockStatePill');
+    elements.clockStateDot = document.getElementById('clockStateDot');
+    elements.clockStateText = document.getElementById('clockStateText');
 
     // Status Badges & Controls
     elements.connectionStatusBadge = document.getElementById('connectionStatusBadge');
@@ -171,6 +175,7 @@
     elements.footerTopic = document.getElementById('footerTopic');
     elements.footerLastSync = document.getElementById('footerLastSync');
     elements.footerMsgCount = document.getElementById('footerMsgCount');
+    elements.telemetryState = document.getElementById('telemetryState');
 
     // Settings Modal
     elements.settingsModal = document.getElementById('settingsModal');
@@ -198,6 +203,7 @@
     elements.showSecondsCheck = document.getElementById('showSecondsCheck');
     elements.currentColorLabel = document.getElementById('currentColorLabel');
     elements.defaultRatio = document.getElementById('defaultRatio');
+    elements.btnToggleClockState = document.getElementById('btnToggleClockState');
     elements.showMontgomeryNumbers = document.getElementById('showMontgomeryNumbers');
     elements.showCanadianInner24 = document.getElementById('showCanadianInner24');
   }
@@ -456,8 +462,11 @@
     }
   }
 
-  function setClockRunning(running) {
-    if (clockState.isRunning === running) return;
+  function setClockRunning(running, source = 'local') {
+    if (clockState.isRunning === running) {
+      updateStatusIndicators();
+      return;
+    }
 
     if (clockState.hasReceivedTime) {
       const currentFast = getCurrentFastTime();
@@ -466,7 +475,91 @@
     }
 
     clockState.isRunning = running;
+    updateStatusIndicators();
     updateRateBadge(clockState.rate);
+
+    // If initiated locally, send START / STOP to MQTT broker command topic
+    if (source === 'local') {
+      publishStateToBroker(running);
+    }
+  }
+
+  function publishStateToBroker(running) {
+    if (!pahoClient || !isConnected) {
+      console.log('Not connected to MQTT; clock state updated locally only');
+      return;
+    }
+
+    const prefix = getTopicPrefix();
+    const cmdTopic = `${prefix}/cmd`;
+    const cmdPayload = running ? 'START' : 'STOP';
+
+    try {
+      const msg = new Paho.MQTT.Message(cmdPayload);
+      msg.destinationName = cmdTopic;
+      msg.qos = 0;
+      pahoClient.send(msg);
+      console.log(`Published ${cmdPayload} to ${cmdTopic}`);
+
+      if (elements.connFeedback) {
+        elements.connFeedback.textContent = `Pushed ${cmdPayload} command to ${cmdTopic}`;
+        elements.connFeedback.style.color = '#22c55e';
+      }
+    } catch (err) {
+      console.warn(`Failed to publish state to ${cmdTopic}:`, err);
+    }
+  }
+
+  function updateStatusIndicators() {
+    const isRunning = clockState.isRunning;
+
+    // 1. Body class for global CSS styles and animations
+    if (elements.body) {
+      elements.body.classList.toggle('is-clock-stopped', !isRunning);
+      elements.body.classList.toggle('is-clock-running', isRunning);
+    }
+
+    // 2. Digital clock status pill
+    if (elements.clockStateText) {
+      elements.clockStateText.textContent = isRunning ? 'RUNNING' : 'STOPPED';
+    }
+    if (elements.clockStatePill) {
+      elements.clockStatePill.setAttribute(
+        'title',
+        isRunning ? 'Fast clock is running (click to stop)' : 'Fast clock is stopped (click to resume)'
+      );
+    }
+
+    // 3. Digital rate badge text
+    if (elements.clockRateText) {
+      elements.clockRateText.textContent = isRunning
+        ? `${clockState.rate.toFixed(1)}x`
+        : `${clockState.rate.toFixed(1)}x (STOPPED)`;
+    }
+
+    // 4. Digital suffix
+    if (elements.suffixMode) {
+      elements.suffixMode.textContent = isRunning ? `${clockState.rate.toFixed(1)}x` : 'STOPPED';
+    }
+
+    // 5. Analog badge title
+    if (elements.analogStoppedBadge) {
+      elements.analogStoppedBadge.setAttribute(
+        'title',
+        isRunning ? '' : 'Fast clock is stopped. Click to resume.'
+      );
+    }
+
+    // 6. Settings Modal Telemetry
+    if (elements.telemetryState) {
+      elements.telemetryState.textContent = isRunning ? 'ACTIVE' : 'INACTIVE (STOPPED)';
+      elements.telemetryState.style.color = isRunning ? '#22c55e' : '#ef4444';
+    }
+
+    // 7. Settings Modal toggle button
+    if (elements.btnToggleClockState) {
+      elements.btnToggleClockState.textContent = isRunning ? '⏸ Pause Fast Clock' : '▶ Resume Fast Clock';
+    }
   }
 
   function updateRateSelect(rate) {
@@ -631,7 +724,7 @@
     }
 
     if (newRunning !== null) {
-      setClockRunning(newRunning);
+      setClockRunning(newRunning, 'remote');
     }
 
     if (newDate && !isNaN(newDate.getTime())) {
@@ -684,10 +777,12 @@
 
   function updateRateBadge(rate) {
     if (elements.clockRateText) {
-      elements.clockRateText.textContent = `${rate.toFixed(1)}x`;
+      elements.clockRateText.textContent = clockState.isRunning
+        ? `${rate.toFixed(1)}x`
+        : `${rate.toFixed(1)}x (STOPPED)`;
     }
     if (elements.suffixMode) {
-      elements.suffixMode.textContent = clockState.isRunning ? `${rate.toFixed(1)}x` : 'PAUSED';
+      elements.suffixMode.textContent = clockState.isRunning ? `${rate.toFixed(1)}x` : 'STOPPED';
     }
   }
 
@@ -1007,6 +1102,13 @@
       });
     }
 
+    // Modal Toggle Fast Clock State Button (Pause / Resume)
+    if (elements.btnToggleClockState) {
+      elements.btnToggleClockState.addEventListener('click', () => {
+        setClockRunning(!clockState.isRunning, 'local');
+      });
+    }
+
     // Rate Badge Click on Digital Display (quick cycle ratios: 1x -> 2x -> 3x -> 4x -> 6x -> 8x -> 1x)
     if (elements.rateBadge) {
       elements.rateBadge.addEventListener('click', () => {
@@ -1015,6 +1117,20 @@
         let idx = rates.findIndex(r => Math.abs(r - current) < 0.05);
         let nextRate = (idx !== -1 && idx < rates.length - 1) ? rates[idx + 1] : rates[0];
         setClockRate(nextRate, 'local');
+      });
+    }
+
+    // Clock Status Pill click on Digital Display (toggle start / stop)
+    if (elements.clockStatePill) {
+      elements.clockStatePill.addEventListener('click', () => {
+        setClockRunning(!clockState.isRunning, 'local');
+      });
+    }
+
+    // Analog Dial Stopped Plaque click (toggle start / resume)
+    if (elements.analogStoppedBadge) {
+      elements.analogStoppedBadge.addEventListener('click', () => {
+        setClockRunning(!clockState.isRunning, 'local');
       });
     }
 
@@ -1193,6 +1309,7 @@
     setLedColor(settings.ledColor);
     setSecondsDisplay(settings.showSeconds);
     updateRateBadge(settings.clockRate);
+    updateStatusIndicators();
   }
 
   // Run on DOM ready

@@ -88,6 +88,12 @@
                   <text x="300" y="405" class="brand-jewels">21 JEWELS • ADJUSTED 5 POSITIONS</text>
                 </g>
 
+                <!-- Stopped Plaque on Analog Face -->
+                <g id="analogStoppedBadge" class="analog-stopped-badge" text-anchor="middle" cursor="pointer" pointer-events="all">
+                  <rect x="235" y="360" width="130" height="24" rx="4" class="stopped-badge-plate"/>
+                  <text x="300" y="376" class="stopped-badge-text">STOPPED</text>
+                </g>
+
                 <!-- Clock Hands Group (Deferred until MQTT sync) -->
                 <g id="clockHands" class="clock-hands">
                   <!-- Hour Hand -->
@@ -154,8 +160,14 @@
         <div class="digital-frame">
           <div class="digital-header">
             <span class="digital-subheading">RAILROAD FAST CLOCK DISPATCH</span>
-            <div class="digital-rate-badge" id="rateBadge" title="Click to cycle fast clock ratio (syncs with MQTT broker)">
-              RATE: <strong id="clockRateText">1.0x</strong>
+            <div class="digital-header-badges">
+              <div class="digital-status-pill" id="clockStatePill" title="Fast clock status (click to start/stop)">
+                <span class="status-indicator-dot" id="clockStateDot"></span>
+                <span id="clockStateText">RUNNING</span>
+              </div>
+              <div class="digital-rate-badge" id="rateBadge" title="Click to cycle fast clock ratio (syncs with MQTT broker)">
+                RATE: <strong id="clockRateText">1.0x</strong>
+              </div>
             </div>
           </div>
 
@@ -294,6 +306,10 @@
                 <span class="f-label">Packets:</span>
                 <span class="f-val" id="footerMsgCount">0</span>
               </div>
+              <div class="telemetry-item">
+                <span class="f-label">Clock State:</span>
+                <span class="f-val" id="telemetryState">ACTIVE</span>
+              </div>
             </div>
           </div>
 
@@ -359,6 +375,16 @@ allow_anonymous true</pre>
                 <option value="6">6:1 Fast Clock</option>
                 <option value="8">8:1 Fast Clock</option>
               </select>
+            </div>
+
+            <div class="form-group span-2">
+              <label>Fast Clock Operating State</label>
+              <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary" id="btnToggleClockState" style="width:auto; padding:0.45rem 1rem;">
+                  ⏸ Pause Fast Clock
+                </button>
+                <small style="margin:0;">Syncs START / STOP command with MQTT broker.</small>
+              </div>
             </div>
 
             <div class="form-group span-2">
