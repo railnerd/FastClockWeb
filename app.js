@@ -7,7 +7,7 @@
   'use strict';
 
   // --- State Configuration & Storage ---
-  const STORAGE_KEY = 'fastclock_settings_v4';
+  const STORAGE_KEY = 'fastclock_settings_v5';
   
   function getServingHost() {
     if (typeof window !== 'undefined' && window.location && window.location.hostname) {
@@ -18,12 +18,12 @@
   }
 
   const defaultSettings = {
-    mqttHost: getServingHost(),
+    mqttHost: '', // Empty defaults to serving host (getServingHost()), falling back to localhost
     mqttPort: 9001,
     mqttPath: '',
     mqttTopic: 'layout/clock/time',
     mqttClientId: 'fastclock_web_' + Math.random().toString(16).substring(2, 8),
-    mqttUseSSL: false,
+    mqttUseSSL: (typeof window !== 'undefined' && window.location && window.location.protocol === 'https:'),
     mqttUsername: '',
     mqttPassword: '',
     viewMode: 'both', // 'both' | 'analog' | 'digital'
@@ -56,7 +56,7 @@
   let isConnected = false;
   let reconnectTimer = null;
   let activeHost = null;
-  let triedFallbackToLocalhost = false;
+  let hostAttemptIndex = 0;
 
   // DOM Elements Cache
   const elements = {};
@@ -101,8 +101,7 @@
     }
 
     if (fileConfig.mqttHost !== undefined) {
-      const fHost = String(fileConfig.mqttHost).trim();
-      settings.mqttHost = fHost || getServingHost();
+      settings.mqttHost = String(fileConfig.mqttHost).trim();
     }
     if (fileConfig.mqttPort !== undefined) settings.mqttPort = fileConfig.mqttPort;
     if (fileConfig.mqttPath !== undefined) settings.mqttPath = fileConfig.mqttPath;
@@ -556,7 +555,40 @@
   }
 
   // --- Eclipse Paho MQTT Integration ---
-  function connectMqtt(useFallbackHost = false) {
+  /**
+   * Generates candidate broker hosts in prioritized order:
+   * 1. Explicitly configured host (from config.js or settings modal)
+   * 2. Host where page is being served (getServingHost())
+   * 3. 'localhost'
+   */
+  function getCandidateHosts() {
+    const list = [];
+    const configuredHost = (settings.mqttHost && settings.mqttHost.trim()) ? settings.mqttHost.trim() : '';
+    const servingHost = getServingHost();
+
+    // 1. If configured host is provided, try it first
+    if (configuredHost) {
+      list.push(configuredHost);
+    }
+
+    // 2. Fallback to serving host (where the page is hosted) if different
+    if (servingHost && !list.includes(servingHost)) {
+      list.push(servingHost);
+    }
+
+    // 3. Fallback to localhost if not already in the list
+    if (!list.includes('localhost') && !list.includes('127.0.0.1')) {
+      list.push('localhost');
+    }
+
+    if (list.length === 0) {
+      list.push('localhost');
+    }
+
+    return list;
+  }
+
+  function connectMqtt(attemptIndex = 0) {
     if (isConnecting || isConnected) return;
 
     if (typeof Paho === 'undefined' || !Paho.MQTT || !Paho.MQTT.Client) {
@@ -564,16 +596,16 @@
       return;
     }
 
-    const servingHost = getServingHost();
-    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || servingHost;
+    const candidateHosts = getCandidateHosts();
+    hostAttemptIndex = (attemptIndex >= 0 && attemptIndex < candidateHosts.length) ? attemptIndex : 0;
+    activeHost = candidateHosts[hostAttemptIndex];
 
-    if (useFallbackHost) {
-      activeHost = 'localhost';
-      triedFallbackToLocalhost = true;
-      updateStatusBadge('connecting', 'Trying localhost...');
+    const isFallback = (hostAttemptIndex > 0);
+    const primaryHost = candidateHosts[0];
+
+    if (isFallback) {
+      updateStatusBadge('connecting', `Trying ${activeHost}...`);
     } else {
-      activeHost = primaryHost;
-      triedFallbackToLocalhost = (primaryHost.toLowerCase() === 'localhost' || primaryHost === '127.0.0.1');
       updateStatusBadge('connecting', 'Connecting...');
     }
 
@@ -584,7 +616,7 @@
     const clientId = settings.mqttClientId.trim() || ('fastclock_' + Math.random().toString(16).substr(2, 6));
 
     if (elements.footerBroker) {
-      const fallbackTag = (activeHost !== primaryHost) ? ' (fallback)' : '';
+      const fallbackTag = isFallback ? ' (fallback)' : '';
       elements.footerBroker.textContent = `${settings.mqttUseSSL ? 'wss' : 'ws'}://${activeHost}:${port}${path}${fallbackTag}`;
     }
     if (elements.footerTopic) {
@@ -625,14 +657,15 @@
   function onConnectSuccess() {
     isConnecting = false;
     isConnected = true;
-    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || getServingHost();
-    const isFallback = (activeHost !== primaryHost);
+    const candidateHosts = getCandidateHosts();
+    const primaryHost = candidateHosts[0];
+    const isFallback = (hostAttemptIndex > 0);
 
-    updateStatusBadge('connected', isFallback ? 'MQTT Connected (localhost)' : 'MQTT Connected');
+    updateStatusBadge('connected', isFallback ? `MQTT Connected (${activeHost})` : 'MQTT Connected');
 
     if (elements.connFeedback) {
       elements.connFeedback.textContent = isFallback
-        ? `Connected via fallback to localhost:${settings.mqttPort}!`
+        ? `Connected via fallback to ${activeHost}:${settings.mqttPort}!`
         : `Connected to ${activeHost}:${settings.mqttPort}!`;
       elements.connFeedback.style.color = '#22c55e';
     }
@@ -656,22 +689,25 @@
   }
 
   function handleHostFailure(errorMessage) {
-    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || getServingHost();
+    const candidateHosts = getCandidateHosts();
+    const nextIndex = hostAttemptIndex + 1;
 
-    // If primary host failed to resolve or connect, automatically attempt fallback to localhost
-    if (!triedFallbackToLocalhost && activeHost !== 'localhost' && activeHost !== '127.0.0.1') {
-      console.log(`Could not reach '${activeHost}'. Falling back to 'localhost'...`);
+    // If there is another fallback host in the cascade (serving host or localhost):
+    if (nextIndex < candidateHosts.length) {
+      const nextHost = candidateHosts[nextIndex];
+      console.log(`Could not reach '${activeHost}'. Falling back to '${nextHost}'...`);
+      updateStatusBadge('connecting', `Trying ${nextHost}...`);
       if (elements.connFeedback) {
-        elements.connFeedback.textContent = `Could not reach ${activeHost}. Trying localhost...`;
+        elements.connFeedback.textContent = `Could not reach ${activeHost}. Trying ${nextHost}...`;
         elements.connFeedback.style.color = '#f59e0b';
       }
       setTimeout(() => {
-        connectMqtt(true);
+        connectMqtt(nextIndex);
       }, 500);
       return;
     }
 
-    // Both primary host and localhost failed
+    // All candidate hosts failed
     updateStatusBadge('disconnected', 'MQTT Offline');
     if (elements.connFeedback) {
       elements.connFeedback.textContent = `Failed (${activeHost}): ${errorMessage}`;
@@ -701,7 +737,7 @@
   }
 
   function disconnectMqtt() {
-    triedFallbackToLocalhost = false;
+    hostAttemptIndex = 0;
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
@@ -725,8 +761,8 @@
   function scheduleReconnect() {
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {
-      console.log('Attempting MQTT auto-reconnect (retrying configured host)...');
-      connectMqtt(false);
+      console.log('Attempting MQTT auto-reconnect (retrying primary host)...');
+      connectMqtt(0);
     }, 6000);
   }
 
@@ -907,8 +943,8 @@
 
   function populateSettingsForm() {
     const servingHost = getServingHost();
-    elements.mqttHost.value = settings.mqttHost || servingHost;
-    elements.mqttHost.placeholder = servingHost;
+    elements.mqttHost.value = settings.mqttHost || '';
+    elements.mqttHost.placeholder = `Default: ${servingHost}`;
     elements.mqttPort.value = settings.mqttPort;
     elements.mqttPath.value = settings.mqttPath;
     elements.mqttTopic.value = settings.mqttTopic;
@@ -926,7 +962,7 @@
   }
 
   function saveFormToSettings() {
-    settings.mqttHost = elements.mqttHost.value.trim() || getServingHost();
+    settings.mqttHost = elements.mqttHost.value.trim();
     settings.mqttPort = Number(elements.mqttPort.value) || 9001;
     settings.mqttPath = elements.mqttPath.value.trim();
     settings.mqttTopic = elements.mqttTopic.value.trim();
