@@ -148,7 +148,6 @@
     elements.hourHandGroup = document.getElementById('hourHandGroup');
     elements.minuteHandGroup = document.getElementById('minuteHandGroup');
     elements.secondHandGroup = document.getElementById('secondHandGroup');
-    elements.analogStoppedBadge = document.getElementById('analogStoppedBadge');
 
     // Digital Digits
     elements.digHours = document.getElementById('digHours');
@@ -160,11 +159,9 @@
     elements.syncStatusSummary = document.getElementById('syncStatusSummary');
     elements.rateBadge = document.getElementById('rateBadge');
     elements.clockRateText = document.getElementById('clockRateText');
-    elements.clockStatePill = document.getElementById('clockStatePill');
-    elements.clockStateDot = document.getElementById('clockStateDot');
-    elements.clockStateText = document.getElementById('clockStateText');
 
     // Status Badges & Controls
+    elements.clockStoppedBtn = document.getElementById('clockStoppedBtn');
     elements.connectionStatusBadge = document.getElementById('connectionStatusBadge');
     elements.connectionStatusText = document.getElementById('connectionStatusText');
     elements.fullscreenBtn = document.getElementById('fullscreenBtn');
@@ -372,8 +369,8 @@
 
     const now = getCurrentFastTime();
 
-    // 1. Render Analog Hands only when analog view is active
-    if (settings.viewMode !== 'digital') {
+    // 1. Render Analog Hands only when analog view is active and clock is running
+    if (settings.viewMode !== 'digital' && clockState.isRunning) {
       updateHandPositions(now);
     }
 
@@ -436,6 +433,8 @@
       if (elements.clockHands) {
         elements.clockHands.classList.add('is-synced');
       }
+    } else if (!clockState.isRunning && settings.viewMode !== 'digital') {
+      updateHandPositions(newDate);
     }
   }
 
@@ -475,6 +474,12 @@
     }
 
     clockState.isRunning = running;
+
+    // Immediately update hands to exact stopped or resumed time
+    if (clockState.hasReceivedTime && settings.viewMode !== 'digital') {
+      updateHandPositions(getCurrentFastTime());
+    }
+
     updateStatusIndicators();
     updateRateBadge(clockState.rate);
 
@@ -519,44 +524,13 @@
       elements.body.classList.toggle('is-clock-running', isRunning);
     }
 
-    // 2. Digital clock status pill
-    if (elements.clockStateText) {
-      elements.clockStateText.textContent = isRunning ? 'RUNNING' : 'STOPPED';
-    }
-    if (elements.clockStatePill) {
-      elements.clockStatePill.setAttribute(
-        'title',
-        isRunning ? 'Fast clock is running (click to stop)' : 'Fast clock is stopped (click to resume)'
-      );
-    }
-
-    // 3. Digital rate badge text
-    if (elements.clockRateText) {
-      elements.clockRateText.textContent = isRunning
-        ? `${clockState.rate.toFixed(1)}x`
-        : `${clockState.rate.toFixed(1)}x (STOPPED)`;
-    }
-
-    // 4. Digital suffix
-    if (elements.suffixMode) {
-      elements.suffixMode.textContent = isRunning ? `${clockState.rate.toFixed(1)}x` : 'STOPPED';
-    }
-
-    // 5. Analog badge title
-    if (elements.analogStoppedBadge) {
-      elements.analogStoppedBadge.setAttribute(
-        'title',
-        isRunning ? '' : 'Fast clock is stopped. Click to resume.'
-      );
-    }
-
-    // 6. Settings Modal Telemetry
+    // 2. Settings Modal Telemetry
     if (elements.telemetryState) {
       elements.telemetryState.textContent = isRunning ? 'ACTIVE' : 'INACTIVE (STOPPED)';
       elements.telemetryState.style.color = isRunning ? '#22c55e' : '#ef4444';
     }
 
-    // 7. Settings Modal toggle button
+    // 3. Settings Modal toggle button
     if (elements.btnToggleClockState) {
       elements.btnToggleClockState.textContent = isRunning ? '⏸ Pause Fast Clock' : '▶ Resume Fast Clock';
     }
@@ -777,12 +751,10 @@
 
   function updateRateBadge(rate) {
     if (elements.clockRateText) {
-      elements.clockRateText.textContent = clockState.isRunning
-        ? `${rate.toFixed(1)}x`
-        : `${rate.toFixed(1)}x (STOPPED)`;
+      elements.clockRateText.textContent = `${rate.toFixed(1)}x`;
     }
     if (elements.suffixMode) {
-      elements.suffixMode.textContent = clockState.isRunning ? `${rate.toFixed(1)}x` : 'STOPPED';
+      elements.suffixMode.textContent = clockState.isRunning ? `${rate.toFixed(1)}x` : 'PAUSED';
     }
   }
 
@@ -1120,18 +1092,9 @@
       });
     }
 
-    // Clock Status Pill click on Digital Display (toggle start / stop)
-    if (elements.clockStatePill) {
-      elements.clockStatePill.addEventListener('click', () => {
-        setClockRunning(!clockState.isRunning, 'local');
-      });
-    }
-
-    // Analog Dial Stopped Plaque click (toggle start / resume)
-    if (elements.analogStoppedBadge) {
-      elements.analogStoppedBadge.addEventListener('click', () => {
-        setClockRunning(!clockState.isRunning, 'local');
-      });
+    // Stopped Indicator Icon in Top Screen Controls (opens settings modal)
+    if (elements.clockStoppedBtn) {
+      elements.clockStoppedBtn.addEventListener('click', openModal);
     }
 
     // MQTT Connect / Disconnect Buttons in Modal

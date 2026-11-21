@@ -147,11 +147,12 @@ FastClockWeb derives the topic prefix from your configured time topic (e.g. `lay
 
 ### Bidirectional Rate & State Control
 - **Broker -> Display**: When the broker publishes on `{prefix}/rate` or `{prefix}/state` (or `{prefix}/cmd`), FastClockWeb immediately updates its speed and running/stopped state:
-  - **Analog Clock**: When stopped, an authentic railroad enamel `STOPPED` plaque appears on the dial. When running, the dial is clean and unobstructed.
-  - **Digital Clock**: The status pill switches between `RUNNING` (green indicator) and `STOPPED` (pulsing amber/red indicator), digital colons freeze, and the rate badge indicates `(STOPPED)`.
+  - **Screen Controls Indicator**: When the clock is stopped, a glowing `⏸` indicator icon appears alongside the Fullscreen and Settings icons in the top-right corner. Clicking it opens Settings.
+  - **Analog Clock**: Clock hands freeze completely and cease animation while the clock is stopped; the dial face remains 100% authentic and unobstructed.
+  - **Digital Clock**: Colons (`:`) stop blinking and stay solid, and the digital suffix displays `PAUSED`.
   - The internal time-base smoothly re-anchors on the fly so clock hands never jump or stutter when resumed or re-rated.
 - **Display -> Broker**:
-  - Clicking the **`RUNNING` / `STOPPED`** status pill, the analog **`STOPPED`** plaque, or the toggle button in Settings sends `START` or `STOP` to `{prefix}/cmd` on the broker.
+  - The **`Pause / Resume Fast Clock`** toggle button inside the Settings dialog sends `START` or `STOP` to `{prefix}/cmd` on the broker.
   - Clicking the digital **`RATE: X.X:1`** badge cycles common ratios (`1:1`, `2:1`, `3:1`, `4:1`, `6:1`, `8:1`), sending `RATE <multiplier>` to `{prefix}/cmd`.
   - All connected displays and the FastClock server synchronize instantly.
 

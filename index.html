@@ -13,8 +13,14 @@
 </head>
 <body class="theme-wood">
   <div class="app-container">
-    <!-- Floating Screen Controls: ONLY Settings and Fullscreen -->
+    <!-- Floating Screen Controls: Fullscreen, Settings, and Stopped Indicator -->
     <div class="screen-controls">
+      <button id="clockStoppedBtn" class="icon-btn stopped-indicator-btn" title="Fast Clock is Stopped (Click to open Settings)" aria-label="Fast Clock is Stopped">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+      </button>
+
       <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen (F)">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
@@ -88,12 +94,6 @@
                   <text x="300" y="405" class="brand-jewels">21 JEWELS • ADJUSTED 5 POSITIONS</text>
                 </g>
 
-                <!-- Stopped Plaque on Analog Face -->
-                <g id="analogStoppedBadge" class="analog-stopped-badge" text-anchor="middle" cursor="pointer" pointer-events="all">
-                  <rect x="235" y="360" width="130" height="24" rx="4" class="stopped-badge-plate"/>
-                  <text x="300" y="376" class="stopped-badge-text">STOPPED</text>
-                </g>
-
                 <!-- Clock Hands Group (Deferred until MQTT sync) -->
                 <g id="clockHands" class="clock-hands">
                   <!-- Hour Hand -->
@@ -160,14 +160,8 @@
         <div class="digital-frame">
           <div class="digital-header">
             <span class="digital-subheading">RAILROAD FAST CLOCK DISPATCH</span>
-            <div class="digital-header-badges">
-              <div class="digital-status-pill" id="clockStatePill" title="Fast clock status (click to start/stop)">
-                <span class="status-indicator-dot" id="clockStateDot"></span>
-                <span id="clockStateText">RUNNING</span>
-              </div>
-              <div class="digital-rate-badge" id="rateBadge" title="Click to cycle fast clock ratio (syncs with MQTT broker)">
-                RATE: <strong id="clockRateText">1.0x</strong>
-              </div>
+            <div class="digital-rate-badge" id="rateBadge" title="Click to cycle fast clock ratio (syncs with MQTT broker)">
+              RATE: <strong id="clockRateText">1.0x</strong>
             </div>
           </div>
 
