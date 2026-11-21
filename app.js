@@ -156,9 +156,6 @@
     elements.suffixAmPm = document.getElementById('suffixAmPm');
     elements.suffixMode = document.getElementById('suffixMode');
     elements.digDate = document.getElementById('digDate');
-    elements.syncStatusSummary = document.getElementById('syncStatusSummary');
-    elements.rateBadge = document.getElementById('rateBadge');
-    elements.clockRateText = document.getElementById('clockRateText');
 
     // Status Badges & Controls
     elements.clockStoppedBtn = document.getElementById('clockStoppedBtn');
@@ -516,21 +513,34 @@
   }
 
   function updateStatusIndicators() {
-    const isRunning = clockState.isRunning;
+    const isRunning = Boolean(clockState.isRunning);
 
-    // 1. Body class for global CSS styles and animations
+    // 1. Direct DOM control for stopped indicator button in floating screen controls
+    if (elements.clockStoppedBtn) {
+      if (isRunning) {
+        elements.clockStoppedBtn.setAttribute('hidden', '');
+        elements.clockStoppedBtn.style.display = 'none';
+        elements.clockStoppedBtn.classList.remove('is-stopped');
+      } else {
+        elements.clockStoppedBtn.removeAttribute('hidden');
+        elements.clockStoppedBtn.style.display = 'inline-flex';
+        elements.clockStoppedBtn.classList.add('is-stopped');
+      }
+    }
+
+    // 2. Body class for global CSS styles and animations
     if (elements.body) {
       elements.body.classList.toggle('is-clock-stopped', !isRunning);
       elements.body.classList.toggle('is-clock-running', isRunning);
     }
 
-    // 2. Settings Modal Telemetry
+    // 3. Settings Modal Telemetry
     if (elements.telemetryState) {
       elements.telemetryState.textContent = isRunning ? 'ACTIVE' : 'INACTIVE (STOPPED)';
       elements.telemetryState.style.color = isRunning ? '#22c55e' : '#ef4444';
     }
 
-    // 3. Settings Modal toggle button
+    // 4. Settings Modal toggle button
     if (elements.btnToggleClockState) {
       elements.btnToggleClockState.textContent = isRunning ? '⏸ Pause Fast Clock' : '▶ Resume Fast Clock';
     }
@@ -601,9 +611,6 @@
     if (elements.footerMsgCount) {
       elements.footerMsgCount.textContent = clockState.packetCount;
     }
-    if (elements.syncStatusSummary) {
-      elements.syncStatusSummary.textContent = `MQTT Sync: ${clockState.lastSyncTime.toLocaleTimeString()}`;
-    }
 
     const trimmed = (payloadStr || '').trim();
     if (!trimmed) return;
@@ -622,11 +629,14 @@
 
     // 2. Dedicated state topic: {prefix}/state (e.g. layout/clock/state -> "ACTIVE" | "INACTIVE")
     if (lowerTopic.endsWith('/state')) {
-      const stateStr = trimmed.toUpperCase();
-      if (stateStr === 'ACTIVE' || stateStr === 'RUNNING') {
-        setClockRunning(true);
-      } else if (stateStr === 'INACTIVE' || stateStr === 'STOPPED' || stateStr === 'PAUSED') {
-        setClockRunning(false);
+      let stateStr = trimmed.toUpperCase();
+      if ((stateStr.startsWith('"') && stateStr.endsWith('"')) || (stateStr.startsWith("'") && stateStr.endsWith("'"))) {
+        stateStr = stateStr.substring(1, stateStr.length - 1).trim();
+      }
+      if (stateStr === 'ACTIVE' || stateStr === 'RUNNING' || stateStr === 'TRUE' || stateStr === '1') {
+        setClockRunning(true, 'remote');
+      } else if (stateStr === 'INACTIVE' || stateStr === 'STOPPED' || stateStr === 'PAUSED' || stateStr === 'FALSE' || stateStr === '0') {
+        setClockRunning(false, 'remote');
       }
       return;
     }
@@ -640,9 +650,9 @@
         const r = parseFloat(arg);
         if (!isNaN(r)) setClockRate(r, 'remote');
       } else if (cmd === 'START') {
-        setClockRunning(true);
+        setClockRunning(true, 'remote');
       } else if (cmd === 'STOP') {
-        setClockRunning(false);
+        setClockRunning(false, 'remote');
       } else if (cmd === 'SET' && arg) {
         const d = parseTimeStringOrDate(arg);
         if (d && !isNaN(d.getTime())) applyNewTime(d);
@@ -1081,17 +1091,6 @@
       });
     }
 
-    // Rate Badge Click on Digital Display (quick cycle ratios: 1x -> 2x -> 3x -> 4x -> 6x -> 8x -> 1x)
-    if (elements.rateBadge) {
-      elements.rateBadge.addEventListener('click', () => {
-        const rates = [1, 2, 3, 4, 6, 8];
-        const current = clockState.rate;
-        let idx = rates.findIndex(r => Math.abs(r - current) < 0.05);
-        let nextRate = (idx !== -1 && idx < rates.length - 1) ? rates[idx + 1] : rates[0];
-        setClockRate(nextRate, 'local');
-      });
-    }
-
     // Stopped Indicator Icon in Top Screen Controls (opens settings modal)
     if (elements.clockStoppedBtn) {
       elements.clockStoppedBtn.addEventListener('click', openModal);
@@ -1126,7 +1125,10 @@
 
   function setTheme(theme) {
     settings.theme = theme;
-    elements.body.className = theme;
+    // Replace only theme-* classes to preserve is-clock-stopped, hide-seconds, etc.
+    const themes = ['theme-wood', 'theme-porcelain', 'theme-dispatcher', 'theme-modern'];
+    themes.forEach(t => elements.body.classList.remove(t));
+    elements.body.classList.add(theme);
     if (elements.themeSelector) elements.themeSelector.value = theme;
     saveSettings();
   }

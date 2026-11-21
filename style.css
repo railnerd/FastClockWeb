@@ -499,7 +499,7 @@ body.theme-dispatcher .center-cap-inner {
 .digital-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 0.65rem;
 }
@@ -511,28 +511,20 @@ body.theme-dispatcher .center-cap-inner {
   color: var(--text-muted);
 }
 
-.digital-rate-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--accent-gold);
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.digital-rate-badge:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 8px rgba(212, 163, 75, 0.35);
-  transform: scale(1.04);
-}
-
 /* --- Fast Clock Stopped State (Screen Controls & Digital Readout) --- */
+.screen-controls .stopped-indicator-btn,
+.stopped-indicator-btn,
+.stopped-indicator-btn[hidden] {
+  display: none !important;
+}
+
+body.is-clock-stopped .screen-controls .stopped-indicator-btn:not([hidden]),
+body.is-clock-stopped .stopped-indicator-btn:not([hidden]),
+.stopped-indicator-btn.is-stopped:not([hidden]) {
+  display: inline-flex !important;
+}
+
 .stopped-indicator-btn {
-  display: none;
   background: rgba(220, 38, 38, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.65);
   color: #fca5a5;
@@ -544,10 +536,6 @@ body.theme-dispatcher .center-cap-inner {
   background: rgba(220, 38, 38, 0.35);
   border-color: #ef4444;
   color: #ffffff;
-}
-
-body.is-clock-stopped .stopped-indicator-btn {
-  display: inline-flex;
 }
 
 body.is-clock-stopped .digit-sep {
@@ -675,16 +663,13 @@ body.is-clock-stopped .digit-sep {
 .digital-info-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.65rem;
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   color: var(--text-muted);
   text-transform: uppercase;
-}
-
-.meta-sep {
-  opacity: 0.4;
 }
 
 /* Color picker group inside settings modal */

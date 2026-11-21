@@ -18,7 +18,7 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
   - Selectable LED colors: Railroad Signal Red, Dispatcher Amber, Highball Green, Ice Blue, and Cool White.
   - 12-Hour (AM/PM) or 24-Hour Military/Railroad standard time.
   - Fast clock ratio indicator (e.g. `1.0x`, `4.0x`, `PAUSED`).
-  - Date banner and last MQTT sync timestamp.
+  - Clean date banner (live MQTT telemetry is neatly organized in Settings).
 
 - **Flexible Display Layouts**:
   - **Both**: Side-by-side (widescreen) or stacked (portrait/tablets).
@@ -153,7 +153,7 @@ FastClockWeb derives the topic prefix from your configured time topic (e.g. `lay
   - The internal time-base smoothly re-anchors on the fly so clock hands never jump or stutter when resumed or re-rated.
 - **Display -> Broker**:
   - The **`Pause / Resume Fast Clock`** toggle button inside the Settings dialog sends `START` or `STOP` to `{prefix}/cmd` on the broker.
-  - Clicking the digital **`RATE: X.X:1`** badge cycles common ratios (`1:1`, `2:1`, `3:1`, `4:1`, `6:1`, `8:1`), sending `RATE <multiplier>` to `{prefix}/cmd`.
+  - Selecting a ratio in the Settings dialog sends `RATE <multiplier>` to `{prefix}/cmd`.
   - All connected displays and the FastClock server synchronize instantly.
 
 ---

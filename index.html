@@ -15,7 +15,7 @@
   <div class="app-container">
     <!-- Floating Screen Controls: Fullscreen, Settings, and Stopped Indicator -->
     <div class="screen-controls">
-      <button id="clockStoppedBtn" class="icon-btn stopped-indicator-btn" title="Fast Clock is Stopped (Click to open Settings)" aria-label="Fast Clock is Stopped">
+      <button id="clockStoppedBtn" class="icon-btn stopped-indicator-btn" hidden title="Fast Clock is Stopped (Click to open Settings)" aria-label="Fast Clock is Stopped">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
         </svg>
@@ -160,9 +160,6 @@
         <div class="digital-frame">
           <div class="digital-header">
             <span class="digital-subheading">RAILROAD FAST CLOCK DISPATCH</span>
-            <div class="digital-rate-badge" id="rateBadge" title="Click to cycle fast clock ratio (syncs with MQTT broker)">
-              RATE: <strong id="clockRateText">1.0x</strong>
-            </div>
           </div>
 
           <!-- Digital Readout Display -->
@@ -185,15 +182,13 @@
               <!-- AM / PM / 24H Badge -->
               <div class="digit-suffix" id="digSuffixContainer">
                 <span class="suffix-elem" id="suffixAmPm">--</span>
-                <span class="suffix-elem suffix-mode" id="suffixMode">SYNC</span>
+                <span class="suffix-elem suffix-mode" id="suffixMode">--</span>
               </div>
             </div>
 
-            <!-- Date & Metadata Banner -->
+            <!-- Date Banner -->
             <div class="digital-info-row">
-              <span id="digDate">WAITING FOR MQTT SYNC</span>
-              <span class="meta-sep">•</span>
-              <span id="syncStatusSummary">Connecting to MQTT...</span>
+              <span id="digDate">--</span>
             </div>
           </div>
         </div>
