@@ -162,16 +162,10 @@
     // Status Badges & Controls
     elements.connectionStatusBadge = document.getElementById('connectionStatusBadge');
     elements.connectionStatusText = document.getElementById('connectionStatusText');
-    elements.themeSelector = document.getElementById('themeSelector');
     elements.fullscreenBtn = document.getElementById('fullscreenBtn');
     elements.settingsBtn = document.getElementById('settingsBtn');
 
-    // Digital Toolbar
-    elements.btn12h = document.getElementById('btn12h');
-    elements.btn24h = document.getElementById('btn24h');
-    elements.btnToggleSeconds = document.getElementById('btnToggleSeconds');
-
-    // Footer items
+    // Telemetry items (inside settings modal)
     elements.footerBroker = document.getElementById('footerBroker');
     elements.footerTopic = document.getElementById('footerTopic');
     elements.footerLastSync = document.getElementById('footerLastSync');
@@ -196,9 +190,12 @@
     elements.connFeedback = document.getElementById('connFeedback');
 
     // Clock Options Fields
+    elements.themeSelector = document.getElementById('themeSelector');
     elements.defaultViewSelect = document.getElementById('defaultViewSelect');
     elements.clockHandMotion = document.getElementById('clockHandMotion');
     elements.timeFormatSelect = document.getElementById('timeFormatSelect');
+    elements.showSecondsCheck = document.getElementById('showSecondsCheck');
+    elements.currentColorLabel = document.getElementById('currentColorLabel');
     elements.defaultRatio = document.getElementById('defaultRatio');
     elements.showMontgomeryNumbers = document.getElementById('showMontgomeryNumbers');
     elements.showCanadianInner24 = document.getElementById('showCanadianInner24');
@@ -822,18 +819,21 @@
       });
     });
 
-    // Digital Toolbar 12H / 24H
-    if (elements.btn12h) {
-      elements.btn12h.addEventListener('click', () => setTimeFormat('12'));
-    }
-    if (elements.btn24h) {
-      elements.btn24h.addEventListener('click', () => setTimeFormat('24'));
-    }
-    if (elements.btnToggleSeconds) {
-      elements.btnToggleSeconds.addEventListener('click', toggleSeconds);
+    // Time Format in Modal
+    if (elements.timeFormatSelect) {
+      elements.timeFormatSelect.addEventListener('change', (e) => {
+        setTimeFormat(e.target.value);
+      });
     }
 
-    // LED Color Chips
+    // Seconds Toggle in Modal
+    if (elements.showSecondsCheck) {
+      elements.showSecondsCheck.addEventListener('change', (e) => {
+        setSecondsDisplay(e.target.checked);
+      });
+    }
+
+    // LED Color Chips in Modal
     document.querySelectorAll('.color-chip[data-color]').forEach(chip => {
       chip.addEventListener('click', () => {
         setLedColor(chip.dataset.color);
@@ -880,18 +880,15 @@
   function setTimeFormat(fmt) {
     settings.timeFormat = fmt;
     lastDigSec = -1; // Force immediate digital display refresh
-    if (elements.btn12h) elements.btn12h.classList.toggle('active', fmt === '12');
-    if (elements.btn24h) elements.btn24h.classList.toggle('active', fmt === '24');
     if (elements.timeFormatSelect) elements.timeFormatSelect.value = fmt;
     saveSettings();
   }
 
-  function toggleSeconds() {
-    settings.showSeconds = !settings.showSeconds;
+  function setSecondsDisplay(show) {
+    settings.showSeconds = !!show;
     elements.body.classList.toggle('hide-seconds', !settings.showSeconds);
-    if (elements.btnToggleSeconds) {
-      elements.btnToggleSeconds.textContent = settings.showSeconds ? 'SEC ON' : 'SEC OFF';
-      elements.btnToggleSeconds.classList.toggle('active', settings.showSeconds);
+    if (elements.showSecondsCheck) {
+      elements.showSecondsCheck.checked = settings.showSeconds;
     }
     saveSettings();
   }
@@ -904,17 +901,21 @@
 
     const root = document.documentElement;
     const colorMap = {
-      red: { color: '#ff3333', glow: 'rgba(255, 51, 51, 0.55)', inactive: 'rgba(255, 51, 51, 0.08)' },
-      amber: { color: '#ffb000', glow: 'rgba(255, 176, 0, 0.55)', inactive: 'rgba(255, 176, 0, 0.08)' },
-      green: { color: '#2aff6b', glow: 'rgba(42, 255, 107, 0.55)', inactive: 'rgba(42, 255, 107, 0.08)' },
-      blue: { color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.55)', inactive: 'rgba(56, 189, 248, 0.08)' },
-      white: { color: '#f1f5f9', glow: 'rgba(241, 245, 249, 0.5)', inactive: 'rgba(241, 245, 249, 0.08)' }
+      red: { label: 'Signal Red', color: '#ff3333', glow: 'rgba(255, 51, 51, 0.55)', inactive: 'rgba(255, 51, 51, 0.08)' },
+      amber: { label: 'Dispatcher Amber', color: '#ffb000', glow: 'rgba(255, 176, 0, 0.55)', inactive: 'rgba(255, 176, 0, 0.08)' },
+      green: { label: 'Highball Green', color: '#2aff6b', glow: 'rgba(42, 255, 107, 0.55)', inactive: 'rgba(42, 255, 107, 0.08)' },
+      blue: { label: 'Ice Blue', color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.55)', inactive: 'rgba(56, 189, 248, 0.08)' },
+      white: { label: 'Cool White', color: '#f1f5f9', glow: 'rgba(241, 245, 249, 0.5)', inactive: 'rgba(241, 245, 249, 0.08)' }
     };
 
     const cfg = colorMap[color] || colorMap.red;
     root.style.setProperty('--led-color', cfg.color);
     root.style.setProperty('--led-glow', cfg.glow);
     root.style.setProperty('--led-inactive', cfg.inactive);
+
+    if (elements.currentColorLabel) {
+      elements.currentColorLabel.textContent = cfg.label;
+    }
 
     saveSettings();
   }
@@ -952,12 +953,18 @@
     elements.mqttUsername.value = settings.mqttUsername || '';
     elements.mqttPassword.value = settings.mqttPassword || '';
 
+    if (elements.themeSelector) elements.themeSelector.value = settings.theme;
     if (elements.defaultViewSelect) elements.defaultViewSelect.value = settings.viewMode;
     elements.clockHandMotion.value = settings.handMotion;
     elements.timeFormatSelect.value = settings.timeFormat;
+    if (elements.showSecondsCheck) elements.showSecondsCheck.checked = settings.showSeconds;
     elements.defaultRatio.value = String(settings.clockRate);
     elements.showMontgomeryNumbers.checked = settings.showMontgomery;
     elements.showCanadianInner24.checked = settings.showInner24;
+
+    document.querySelectorAll('.color-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.color === settings.ledColor);
+    });
   }
 
   function saveFormToSettings() {
@@ -970,9 +977,11 @@
     settings.mqttUsername = elements.mqttUsername.value.trim();
     settings.mqttPassword = elements.mqttPassword.value;
 
+    if (elements.themeSelector) settings.theme = elements.themeSelector.value;
     if (elements.defaultViewSelect) settings.viewMode = elements.defaultViewSelect.value;
     settings.handMotion = elements.clockHandMotion.value;
     settings.timeFormat = elements.timeFormatSelect.value;
+    if (elements.showSecondsCheck) settings.showSeconds = elements.showSecondsCheck.checked;
     settings.clockRate = Number(elements.defaultRatio.value) || 4.0;
     settings.showMontgomery = elements.showMontgomeryNumbers.checked;
     settings.showInner24 = elements.showCanadianInner24.checked;
@@ -999,15 +1008,7 @@
     setViewMode(settings.viewMode);
     setTimeFormat(settings.timeFormat);
     setLedColor(settings.ledColor);
-
-    if (!settings.showSeconds) {
-      elements.body.classList.add('hide-seconds');
-      if (elements.btnToggleSeconds) {
-        elements.btnToggleSeconds.textContent = 'SEC OFF';
-        elements.btnToggleSeconds.classList.remove('active');
-      }
-    }
-
+    setSecondsDisplay(settings.showSeconds);
     updateRateBadge(settings.clockRate);
 
     // Update active view pill

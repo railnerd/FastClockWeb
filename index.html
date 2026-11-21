@@ -32,14 +32,6 @@
           <button class="pill-btn" data-view="digital" title="Digital clock only">Digital</button>
         </div>
 
-        <!-- Quick Theme Toggle -->
-        <select id="themeSelector" class="control-select" title="Change Theme">
-          <option value="theme-wood">Vintage Station (Wood & Brass)</option>
-          <option value="theme-porcelain">Classic Railroad Enamel</option>
-          <option value="theme-dispatcher">Dispatcher Night (Dark Amber)</option>
-          <option value="theme-modern">Modern High-Contrast</option>
-        </select>
-
         <!-- Fullscreen Button -->
         <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen (F)">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -218,48 +210,9 @@
               <span id="syncStatusSummary">Connecting to MQTT...</span>
             </div>
           </div>
-
-          <!-- Quick Digital Customization Controls -->
-          <div class="digital-toolbar">
-            <div class="btn-group-sm">
-              <button class="tool-btn active" id="btn12h">12H</button>
-              <button class="tool-btn" id="btn24h">24H</button>
-            </div>
-            <div class="btn-group-sm">
-              <button class="tool-btn active" id="btnToggleSeconds">SEC ON</button>
-            </div>
-            <div class="color-picker-group">
-              <span class="color-label">LED:</span>
-              <button class="color-chip active" data-color="red" style="background:#ff2b2b;" title="Railroad Signal Red"></button>
-              <button class="color-chip" data-color="amber" style="background:#ffb000;" title="Dispatcher Amber"></button>
-              <button class="color-chip" data-color="green" style="background:#2aff6b;" title="Highball Green"></button>
-              <button class="color-chip" data-color="blue" style="background:#38bdf8;" title="Ice Blue"></button>
-              <button class="color-chip" data-color="white" style="background:#f1f5f9;" title="Cool White"></button>
-            </div>
-          </div>
         </div>
       </section>
     </main>
-
-    <!-- Footer telemetry bar -->
-    <footer class="app-footer">
-      <div class="footer-item">
-        <span class="f-label">Broker:</span>
-        <span class="f-val" id="footerBroker">ws://localhost:9001</span>
-      </div>
-      <div class="footer-item">
-        <span class="f-label">Topic:</span>
-        <span class="f-val" id="footerTopic">layout/clock/time</span>
-      </div>
-      <div class="footer-item">
-        <span class="f-label">Last Packet:</span>
-        <span class="f-val" id="footerLastSync">None</span>
-      </div>
-      <div class="footer-item">
-        <span class="f-label">Messages:</span>
-        <span class="f-val" id="footerMsgCount">0</span>
-      </div>
-    </footer>
   </div>
 
   <!-- Settings Modal Dialog -->
@@ -335,6 +288,29 @@
             <span class="conn-feedback" id="connFeedback"></span>
           </div>
 
+          <!-- Live MQTT Telemetry Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-title">Live MQTT Telemetry</div>
+            <div class="telemetry-grid">
+              <div class="telemetry-item">
+                <span class="f-label">Active Broker:</span>
+                <span class="f-val" id="footerBroker">Not Connected</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Topic:</span>
+                <span class="f-val" id="footerTopic">layout/clock/time</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Last Sync:</span>
+                <span class="f-val" id="footerLastSync">None</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Packets:</span>
+                <span class="f-val" id="footerMsgCount">0</span>
+              </div>
+            </div>
+          </div>
+
           <div class="help-box">
             <strong>Mosquitto WebSocket Tip:</strong>
             <p>Ensure your <code>mosquitto.conf</code> has a WebSocket listener configured:</p>
@@ -344,11 +320,21 @@ allow_anonymous true</pre>
           </div>
         </div>
 
-        <!-- Tab 2: Clock Options -->
+        <!-- Tab 2: Clock & Display Options -->
         <div class="tab-pane" id="tab-clock">
           <div class="form-grid">
             <div class="form-group span-2">
-              <label for="defaultViewSelect">Default Display View</label>
+              <label for="themeSelector">Station Visual Theme</label>
+              <select id="themeSelector">
+                <option value="theme-wood">Vintage Station (Wood & Brass)</option>
+                <option value="theme-porcelain">Classic Railroad Enamel (Porcelain)</option>
+                <option value="theme-dispatcher">Dispatcher Night (Dark Amber)</option>
+                <option value="theme-modern">Modern High-Contrast</option>
+              </select>
+            </div>
+
+            <div class="form-group span-2">
+              <label for="defaultViewSelect">Display View</label>
               <select id="defaultViewSelect">
                 <option value="both">Both Displays (Analog Railroad + Digital)</option>
                 <option value="analog">Railroad Standard Clock Only</option>
@@ -357,11 +343,15 @@ allow_anonymous true</pre>
             </div>
 
             <div class="form-group span-2">
-              <label for="clockHandMotion">Analog Hand Movement</label>
-              <select id="clockHandMotion">
-                <option value="sweep">Continuous Smooth Sweep (60 FPS)</option>
-                <option value="step">Stepped Tick (1 second steps)</option>
-              </select>
+              <label>Digital LED Readout Color</label>
+              <div class="color-picker-group">
+                <button type="button" class="color-chip active" data-color="red" style="background:#ff2b2b;" title="Railroad Signal Red"></button>
+                <button type="button" class="color-chip" data-color="amber" style="background:#ffb000;" title="Dispatcher Amber"></button>
+                <button type="button" class="color-chip" data-color="green" style="background:#2aff6b;" title="Highball Green"></button>
+                <button type="button" class="color-chip" data-color="blue" style="background:#38bdf8;" title="Ice Blue"></button>
+                <button type="button" class="color-chip" data-color="white" style="background:#f1f5f9;" title="Cool White"></button>
+                <span id="currentColorLabel" class="color-name">Signal Red</span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -373,7 +363,7 @@ allow_anonymous true</pre>
             </div>
 
             <div class="form-group">
-              <label for="defaultRatio">Default Fast Clock Ratio</label>
+              <label for="defaultRatio">Fast Clock Ratio</label>
               <select id="defaultRatio">
                 <option value="1">1:1 (Real Time)</option>
                 <option value="2">2:1 Fast Clock</option>
@@ -386,13 +376,28 @@ allow_anonymous true</pre>
             </div>
 
             <div class="form-group span-2">
+              <label for="clockHandMotion">Analog Hand Movement</label>
+              <select id="clockHandMotion">
+                <option value="sweep">Continuous Smooth Sweep (60 FPS)</option>
+                <option value="step">Stepped Tick (1 second steps)</option>
+              </select>
+            </div>
+
+            <div class="form-group span-2 checkbox-group">
+              <label>
+                <input type="checkbox" id="showSecondsCheck" checked>
+                Show seconds (:SS) on digital clock
+              </label>
+            </div>
+
+            <div class="form-group span-2 checkbox-group">
               <label>
                 <input type="checkbox" id="showMontgomeryNumbers" checked>
                 Show Montgomery Dial individual minute rim numbers (1–60)
               </label>
             </div>
 
-            <div class="form-group span-2">
+            <div class="form-group span-2 checkbox-group">
               <label>
                 <input type="checkbox" id="showCanadianInner24" checked>
                 Show Canadian / Military inner 24-hour red dial numbers (13–24)

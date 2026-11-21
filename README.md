@@ -173,7 +173,8 @@ Seconds or milliseconds:
 
 - <kbd>F</kbd> : Toggle Fullscreen
 - <kbd>Esc</kbd> : Close Settings dialog
-- Top bar buttons: Quickly switch between **Both**, **Railroad**, and **Digital** views, or switch visual themes.
+- **Top bar controls**: Quickly switch between **Both**, **Railroad**, and **Digital** views, or toggle fullscreen.
+- **Settings (⚙)**: Change station theme, LED color, time format (12H/24H), seconds visibility, and MQTT broker options.
 
 ---
 
