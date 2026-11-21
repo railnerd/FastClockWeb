@@ -513,12 +513,21 @@ body.theme-dispatcher .center-cap-inner {
 
 .digital-rate-badge {
   font-size: 0.75rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--accent-gold);
   letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.digital-rate-badge:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 8px rgba(212, 163, 75, 0.35);
+  transform: scale(1.04);
 }
 
 .digital-screen {

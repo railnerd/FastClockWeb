@@ -32,6 +32,10 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
   - **Serving Host Default & Fallback**:
     1. Primary host configured in `config.js` or in the Settings modal
     2. Host where the page is being served (`window.location.hostname`) if the primary host cannot be reached
+  - **Bidirectional FastClock Synchronization**:
+    - Automatically discovers and subscribes to `{prefix}/time`, `{prefix}/rate`, `{prefix}/state`, and `{prefix}/cmd`.
+    - Handles incoming broker rate and run/stop state changes seamlessly without time jumping.
+    - Pushes rate changes (`RATE <multiplier>`) back to `{prefix}/cmd` when adjusted in the UI or by clicking the rate badge.
   - Automatic reconnection with backoff.
 
 ---
@@ -130,11 +134,33 @@ Click the **Gear (⚙)** icon in the upper-right corner of FastClockWeb:
 
 ---
 
+## 📨 FastClock Server & MQTT Protocol
+
+FastClockWeb is fully compatible with [`FastClock`](https://github.com/Davepar/FastClock) (`fastclock.py`) as well as generic MQTT fast clock publishers.
+
+### Topic Structure
+FastClockWeb derives the topic prefix from your configured time topic (e.g. `layout/clock` from `layout/clock/time`) and subscribes to:
+- `{prefix}/time` — Current fast clock time (`HH:MM` or `HH:MM:SS`, retained)
+- `{prefix}/rate` — Speed multiplier (`1.00`, `4.00`, `8.00`, retained)
+- `{prefix}/state` — Clock status (`ACTIVE` or `INACTIVE`, retained)
+- `{prefix}/cmd` — Command stream (`RATE <multiplier>`, `START`, `STOP`, `SET <HH:MM>`)
+
+### Bidirectional Rate Control
+- **Broker -> Display**: When the broker publishes a rate update on `{prefix}/rate` (or `{prefix}/cmd`), FastClockWeb immediately updates its speed and synchronizes the digital badge and settings dropdown. The internal time-base is re-anchored on the fly so clock hands never jump or stutter.
+- **Display -> Broker**: Clicking the digital `RATE: X.X:1` badge cycles through common ratios (`1:1`, `2:1`, `3:1`, `4:1`, `6:1`, `8:1`), or you can choose a ratio in the Settings dialog. FastClockWeb immediately sends `RATE <multiplier>` to `{prefix}/cmd` on the broker, synchronizing the FastClock server and all other connected layout displays.
+
+---
+
 ## 📨 Supported MQTT Message Formats
 
 FastClockWeb automatically detects and parses a wide variety of time formats:
 
-### 1. Fast Clock JSON (Recommended)
+### 1. FastClock Server Protocol (Standard)
+- `{prefix}/time`: `"14:35"` or `"14:35:00"`
+- `{prefix}/rate`: `"4.00"` or `"1.00"`
+- `{prefix}/state`: `"ACTIVE"` or `"INACTIVE"`
+
+### 2. Fast Clock JSON
 ```json
 {"time": "14:35:00", "rate": 4.0, "status": "running"}
 ```
@@ -142,7 +168,7 @@ FastClockWeb automatically detects and parses a wide variety of time formats:
 - `status`: `"running"` or `"paused"`.
 - Hand movement interpolates continuously between updates.
 
-### 2. Discrete Time Values
+### 3. Discrete Time Values
 ```json
 {"hours": 10, "minutes": 45, "seconds": 0, "rate": 4.0}
 ```

@@ -157,6 +157,7 @@
     elements.suffixMode = document.getElementById('suffixMode');
     elements.digDate = document.getElementById('digDate');
     elements.syncStatusSummary = document.getElementById('syncStatusSummary');
+    elements.rateBadge = document.getElementById('rateBadge');
     elements.clockRateText = document.getElementById('clockRateText');
 
     // Status Badges & Controls
@@ -413,14 +414,117 @@
   }
 
   // --- MQTT Payload Parsing ---
+  function getTopicPrefix() {
+    const raw = (settings.mqttTopic && settings.mqttTopic.trim()) || 'layout/clock/time';
+    const stripped = raw.replace(/\/(time|rate|state|cmd|#|\*|\+)$/i, '');
+    return stripped || 'layout/clock';
+  }
+
+  function applyNewTime(newDate) {
+    clockState.baseFastMs = newDate.getTime();
+    clockState.basePerfMs = performance.now();
+
+    if (!clockState.hasReceivedTime) {
+      clockState.hasReceivedTime = true;
+      updateHandPositions(newDate);
+      if (elements.clockHands) {
+        elements.clockHands.classList.add('is-synced');
+      }
+    }
+  }
+
+  function setClockRate(newRate, source = 'local') {
+    const r = Number(newRate);
+    if (isNaN(r) || r < 0) return;
+
+    // Smoothly re-anchor animation base to prevent hands/digits from jumping
+    if (clockState.hasReceivedTime) {
+      const currentFast = getCurrentFastTime();
+      clockState.baseFastMs = currentFast.getTime();
+      clockState.basePerfMs = performance.now();
+    }
+
+    clockState.rate = r;
+    settings.clockRate = r;
+    updateRateBadge(r);
+    updateRateSelect(r);
+    saveSettings();
+
+    // If initiated locally by user, push to MQTT broker command topic
+    if (source === 'local') {
+      publishRateToBroker(r);
+    }
+  }
+
+  function setClockRunning(running) {
+    if (clockState.isRunning === running) return;
+
+    if (clockState.hasReceivedTime) {
+      const currentFast = getCurrentFastTime();
+      clockState.baseFastMs = currentFast.getTime();
+      clockState.basePerfMs = performance.now();
+    }
+
+    clockState.isRunning = running;
+    updateRateBadge(clockState.rate);
+  }
+
+  function updateRateSelect(rate) {
+    if (!elements.defaultRatio) return;
+    const rateStr = String(rate);
+    let match = false;
+    for (let opt of elements.defaultRatio.options) {
+      if (Math.abs(parseFloat(opt.value) - rate) < 0.01) {
+        elements.defaultRatio.value = opt.value;
+        match = true;
+        break;
+      }
+    }
+    if (!match) {
+      const newOpt = document.createElement('option');
+      newOpt.value = rateStr;
+      newOpt.textContent = `${rate}x Fast Clock`;
+      elements.defaultRatio.appendChild(newOpt);
+      elements.defaultRatio.value = rateStr;
+    }
+  }
+
+  function publishRateToBroker(rate) {
+    if (!pahoClient || !isConnected) {
+      console.log('Not connected to MQTT; rate updated locally only');
+      return;
+    }
+
+    const prefix = getTopicPrefix();
+    const cmdTopic = `${prefix}/cmd`;
+    const rateStr = Number(rate).toFixed(2);
+
+    try {
+      // Send RATE command compatible with FastClock server & JMRI
+      const cmdPayload = `RATE ${rateStr}`;
+      const msg = new Paho.MQTT.Message(cmdPayload);
+      msg.destinationName = cmdTopic;
+      msg.qos = 0;
+      pahoClient.send(msg);
+      console.log(`Published to broker on ${cmdTopic}: ${cmdPayload}`);
+
+      if (elements.connFeedback) {
+        elements.connFeedback.textContent = `Pushed rate ${rateStr}x to ${cmdTopic}`;
+        elements.connFeedback.style.color = '#22c55e';
+      }
+    } catch (err) {
+      console.warn(`Failed to publish rate to ${cmdTopic}:`, err);
+    }
+  }
+
   /**
    * Intelligently parses various MQTT time formats:
-   * 1. Plain text: "14:35", "14:35:20", "2:35 PM"
-   * 2. JSON: {"time": "14:35:00", "rate": 4.0}, {"hours": 14, "minutes": 35}, {"rate": 4}
-   * 3. Unix epoch numbers: 1732159800 or 1732159800000
-   * 4. ISO timestamp strings: "2026-11-20T14:35:00"
+   * 1. Multi-topic broker messages: {prefix}/time, {prefix}/rate, {prefix}/state, {prefix}/cmd
+   * 2. Plain text time: "14:35", "14:35:20", "2:35 PM"
+   * 3. JSON: {"time": "14:35:00", "rate": 4.0, "status": "running"}
+   * 4. Unix epoch numbers & ISO strings
    */
-  function handleMqttMessage(payloadStr) {
+  function handleMqttMessage(payloadStr, topic = '') {
     clockState.packetCount++;
     clockState.lastSyncTime = new Date();
 
@@ -434,7 +538,52 @@
       elements.syncStatusSummary.textContent = `MQTT Sync: ${clockState.lastSyncTime.toLocaleTimeString()}`;
     }
 
-    const trimmed = payloadStr.trim();
+    const trimmed = (payloadStr || '').trim();
+    if (!trimmed) return;
+
+    const lowerTopic = (topic || '').toLowerCase();
+
+    // 1. Dedicated rate topic: {prefix}/rate (e.g. layout/clock/rate -> "4.00")
+    if (lowerTopic.endsWith('/rate')) {
+      const parsedRate = parseFloat(trimmed);
+      if (!isNaN(parsedRate) && parsedRate >= 0) {
+        console.log(`Received rate from broker (${topic}): ${parsedRate}`);
+        setClockRate(parsedRate, 'remote');
+        return;
+      }
+    }
+
+    // 2. Dedicated state topic: {prefix}/state (e.g. layout/clock/state -> "ACTIVE" | "INACTIVE")
+    if (lowerTopic.endsWith('/state')) {
+      const stateStr = trimmed.toUpperCase();
+      if (stateStr === 'ACTIVE' || stateStr === 'RUNNING') {
+        setClockRunning(true);
+      } else if (stateStr === 'INACTIVE' || stateStr === 'STOPPED' || stateStr === 'PAUSED') {
+        setClockRunning(false);
+      }
+      return;
+    }
+
+    // 3. Command topic: {prefix}/cmd
+    if (lowerTopic.endsWith('/cmd')) {
+      const parts = trimmed.split(/\s+/);
+      const cmd = parts[0].toUpperCase();
+      const arg = parts[1] || '';
+      if (cmd === 'RATE' && arg) {
+        const r = parseFloat(arg);
+        if (!isNaN(r)) setClockRate(r, 'remote');
+      } else if (cmd === 'START') {
+        setClockRunning(true);
+      } else if (cmd === 'STOP') {
+        setClockRunning(false);
+      } else if (cmd === 'SET' && arg) {
+        const d = parseTimeStringOrDate(arg);
+        if (d && !isNaN(d.getTime())) applyNewTime(d);
+      }
+      return;
+    }
+
+    // 4. Time topic: {prefix}/time (or general JSON payload)
     let newDate = null;
     let newRate = null;
     let newRunning = null;
@@ -444,11 +593,12 @@
       try {
         const data = JSON.parse(trimmed);
         if (typeof data.rate === 'number') newRate = data.rate;
+        else if (typeof data.rate === 'string' && !isNaN(parseFloat(data.rate))) newRate = parseFloat(data.rate);
         if (typeof data.ratio === 'number') newRate = data.ratio;
         if (typeof data.multiplier === 'number') newRate = data.multiplier;
 
         if (typeof data.status === 'string') {
-          newRunning = (data.status.toLowerCase() === 'running');
+          newRunning = (data.status.toLowerCase() === 'running' || data.status.toLowerCase() === 'active');
         } else if (typeof data.running === 'boolean') {
           newRunning = data.running;
         } else if (typeof data.paused === 'boolean') {
@@ -475,31 +625,17 @@
       newDate = parseTimeStringOrDate(trimmed);
     }
 
-    // Apply updates if valid
-    if (newDate && !isNaN(newDate.getTime())) {
-      clockState.baseFastMs = newDate.getTime();
-      clockState.basePerfMs = performance.now();
-
-      if (!clockState.hasReceivedTime) {
-        clockState.hasReceivedTime = true;
-        // Position hands immediately to received time before fading in
-        updateHandPositions(newDate);
-        if (elements.clockHands) {
-          elements.clockHands.classList.add('is-synced');
-        }
-      }
-    }
-
+    // Apply updates
     if (newRate !== null) {
-      clockState.rate = newRate;
-      updateRateBadge(newRate);
+      setClockRate(newRate, 'remote');
     }
 
     if (newRunning !== null) {
-      clockState.isRunning = newRunning;
-      if (elements.suffixMode) {
-        elements.suffixMode.textContent = newRunning ? (clockState.rate + 'x') : 'PAUSED';
-      }
+      setClockRunning(newRunning);
+    }
+
+    if (newDate && !isNaN(newDate.getTime())) {
+      applyNewTime(newDate);
     }
   }
 
@@ -666,13 +802,37 @@
       elements.connFeedback.style.color = '#22c55e';
     }
 
-    // Subscribe to fast clock topic
-    const topic = settings.mqttTopic.trim() || 'layout/clock/time';
-    try {
-      pahoClient.subscribe(topic, { qos: 0 });
-      console.log(`Subscribed to topic: ${topic} on ${activeHost}`);
-    } catch (e) {
-      console.error('Subscription error:', e);
+    // Subscribe to fast clock topics ({prefix}/time, {prefix}/rate, {prefix}/state, {prefix}/cmd)
+    const prefix = getTopicPrefix();
+    const userTopic = (settings.mqttTopic && settings.mqttTopic.trim()) || `${prefix}/time`;
+    const topicsToSub = [];
+
+    if (userTopic.includes('#') || userTopic.includes('+')) {
+      topicsToSub.push(userTopic);
+    } else {
+      topicsToSub.push(userTopic);
+      const timeTopic = `${prefix}/time`;
+      const rateTopic = `${prefix}/rate`;
+      const stateTopic = `${prefix}/state`;
+      const cmdTopic = `${prefix}/cmd`;
+
+      if (!topicsToSub.includes(timeTopic)) topicsToSub.push(timeTopic);
+      if (!topicsToSub.includes(rateTopic)) topicsToSub.push(rateTopic);
+      if (!topicsToSub.includes(stateTopic)) topicsToSub.push(stateTopic);
+      if (!topicsToSub.includes(cmdTopic)) topicsToSub.push(cmdTopic);
+    }
+
+    topicsToSub.forEach(t => {
+      try {
+        pahoClient.subscribe(t, { qos: 0 });
+        console.log(`Subscribed to topic: ${t} on ${activeHost}`);
+      } catch (e) {
+        console.error(`Subscription error on ${t}:`, e);
+      }
+    });
+
+    if (elements.footerTopic) {
+      elements.footerTopic.textContent = `${prefix}/(time, rate, state)`;
     }
   }
 
@@ -728,8 +888,9 @@
   }
 
   function onMessageArrived(message) {
-    const payload = message.payloadString;
-    handleMqttMessage(payload);
+    const topic = message.destinationName || '';
+    const payload = message.payloadString || '';
+    handleMqttMessage(payload, topic);
   }
 
   function disconnectMqtt() {
@@ -837,6 +998,25 @@
         setLedColor(chip.dataset.color);
       });
     });
+
+    // Fast Clock Ratio in Modal
+    if (elements.defaultRatio) {
+      elements.defaultRatio.addEventListener('change', (e) => {
+        const newRate = Number(e.target.value);
+        setClockRate(newRate, 'local');
+      });
+    }
+
+    // Rate Badge Click on Digital Display (quick cycle ratios: 1x -> 2x -> 3x -> 4x -> 6x -> 8x -> 1x)
+    if (elements.rateBadge) {
+      elements.rateBadge.addEventListener('click', () => {
+        const rates = [1, 2, 3, 4, 6, 8];
+        const current = clockState.rate;
+        let idx = rates.findIndex(r => Math.abs(r - current) < 0.05);
+        let nextRate = (idx !== -1 && idx < rates.length - 1) ? rates[idx + 1] : rates[0];
+        setClockRate(nextRate, 'local');
+      });
+    }
 
     // MQTT Connect / Disconnect Buttons in Modal
     if (elements.btnConnectMqtt) {
@@ -977,7 +1157,15 @@
     settings.handMotion = elements.clockHandMotion.value;
     settings.timeFormat = elements.timeFormatSelect.value;
     if (elements.showSecondsCheck) settings.showSeconds = elements.showSecondsCheck.checked;
-    settings.clockRate = Number(elements.defaultRatio.value) || 4.0;
+    const chosenRate = Number(elements.defaultRatio.value) || 4.0;
+    if (Math.abs(chosenRate - clockState.rate) > 0.01) {
+      setClockRate(chosenRate, 'local');
+    } else {
+      settings.clockRate = chosenRate;
+      clockState.rate = chosenRate;
+      updateRateBadge(chosenRate);
+    }
+
     settings.showMontgomery = elements.showMontgomeryNumbers.checked;
     settings.showInner24 = elements.showCanadianInner24.checked;
 
