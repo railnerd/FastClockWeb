@@ -246,19 +246,18 @@ html, body {
   padding: 1.5rem 2rem;
   overflow: hidden;
   position: relative;
+  min-height: 0;
+  min-width: 0;
+  --analog-diam: clamp(240px, min(42vw, calc(100vh - 130px)), 560px);
 }
 
 /* Single View Mode Modifiers */
-.clock-stage.view-analog .digital-card {
-  display: none !important;
+.clock-stage.view-analog {
+  --analog-diam: min(85vh, 85vw);
 }
 
-.clock-stage.view-analog .analog-card {
-  width: min(85vh, 85vw);
-  height: min(85vh, 85vw);
-  max-width: min(85vh, 85vw);
-  max-height: min(85vh, 85vw);
-  aspect-ratio: 1 / 1;
+.clock-stage.view-analog .digital-card {
+  display: none !important;
 }
 
 .clock-stage.view-digital .analog-card {
@@ -277,17 +276,18 @@ html, body {
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Traditional Railroad Analog Clock Styling (Always a True Circle) */
+/* Traditional Railroad Analog Clock Styling (Guaranteed 1:1 Perfect Circle) */
 .analog-card {
-  flex: 0 1 auto;
-  aspect-ratio: 1 / 1;
-  width: min(48vw, calc(100vh - 120px));
-  height: min(48vw, calc(100vh - 120px));
-  max-width: 580px;
-  max-height: 580px;
-  min-width: 240px;
-  min-height: 240px;
+  flex: 0 0 var(--analog-diam) !important;
+  width: var(--analog-diam) !important;
+  height: var(--analog-diam) !important;
+  min-width: var(--analog-diam) !important;
+  max-width: var(--analog-diam) !important;
+  min-height: var(--analog-diam) !important;
+  max-height: var(--analog-diam) !important;
+  aspect-ratio: 1 / 1 !important;
   margin: auto;
+  box-sizing: border-box;
 }
 
 .analog-bezel-shadow {
@@ -300,6 +300,7 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .analog-bezel {
@@ -314,6 +315,7 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .analog-dial-rim {
@@ -328,6 +330,7 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .clock-svg {
@@ -338,6 +341,7 @@ html, body {
   display: block;
   overflow: visible;
   filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+  box-sizing: border-box;
 }
 
 /* SVG Text & Hands Styling */
@@ -413,9 +417,9 @@ html, body {
 
 /* Digital Clock Section Styling */
 .digital-card {
-  flex: 1;
-  max-width: 580px;
-  width: 100%;
+  flex: 1 1 360px;
+  min-width: 0;
+  max-width: 620px;
 }
 
 .digital-frame {
@@ -993,17 +997,16 @@ body.hide-seconds .sec-element {
 }
 
 /* Responsive Styles */
-@media (max-width: 900px) {
+@media (max-width: 1024px), (max-aspect-ratio: 12/10) {
   .clock-stage {
     flex-direction: column;
     overflow-y: auto;
     gap: 1.5rem;
     padding: 1rem;
+    --analog-diam: clamp(200px, min(80vw, calc((100vh - 250px) / 2)), 400px);
   }
-  .analog-card {
-    width: min(85vw, 45vh);
-    height: min(85vw, 45vh);
-    max-width: 380px;
-    max-height: 380px;
+  .digital-card {
+    width: min(94vw, 580px);
+    flex: 0 0 auto;
   }
 }
