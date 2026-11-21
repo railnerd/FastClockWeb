@@ -136,7 +136,7 @@ Click the **Gear (⚙)** icon in the upper-right corner of FastClockWeb:
 
 ## 📨 FastClock Server & MQTT Protocol
 
-FastClockWeb is fully compatible with [`FastClock`](https://github.com/Davepar/FastClock) (`fastclock.py`) as well as generic MQTT fast clock publishers.
+FastClockWeb is fully compatible with [`FastClock`](https://github.com/railnerd/FastClock) (`fastclock.py`) as well as generic MQTT fast clock publishers.
 
 ### Topic Structure
 FastClockWeb derives the topic prefix from your configured time topic (e.g. `layout/clock` from `layout/clock/time`) and subscribes to:
