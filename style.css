@@ -840,7 +840,7 @@ body.hide-seconds .sec-element {
 }
 
 .modal-body {
-  padding: 1.25rem 1.4rem;
+  padding: 1.5rem 1.5rem 1.25rem;
   overflow-y: auto;
   flex: 1;
   scrollbar-gutter: stable;
