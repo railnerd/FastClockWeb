@@ -51,6 +51,12 @@ xdg-open index.html
 
 ## ⚙️ Configuration File (`config.js`)
 
+Copy `config.example.js` to create your local `config.js`:
+
+```bash
+cp config.example.js config.js
+```
+
 You can configure your broker host, WebSocket port, topic, and default preferences directly in [`config.js`](config.js):
 
 ```javascript
