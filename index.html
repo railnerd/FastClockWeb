@@ -212,107 +212,12 @@
 
       <div class="modal-body">
         <div class="settings-tabs">
-          <button class="tab-btn active" data-tab="tab-mqtt">MQTT Connection</button>
-          <button class="tab-btn" data-tab="tab-clock">Clock Options</button>
+          <button class="tab-btn active" data-tab="tab-clock">Clock Options</button>
+          <button class="tab-btn" data-tab="tab-mqtt">MQTT Connection</button>
         </div>
 
-        <!-- Tab 1: MQTT Connection -->
-        <div class="tab-pane active" id="tab-mqtt">
-          <p class="tab-intro">
-            Connect directly to your local MQTT broker using <strong>Eclipse Paho MQTT over WebSockets</strong>.
-          </p>
-
-          <div class="form-grid">
-            <div class="form-group span-2">
-              <label for="mqttHost">Broker Host / IP</label>
-              <input type="text" id="mqttHost" value="" placeholder="Default: where page is served">
-              <small>Leave blank to default to where the page is served.</small>
-            </div>
-
-            <div class="form-group">
-              <label for="mqttPort">WebSocket Port</label>
-              <input type="number" id="mqttPort" value="9001" placeholder="9001">
-              <small>Default Mosquitto WS port is 9001.</small>
-            </div>
-
-            <div class="form-group">
-              <label for="mqttPath">WS Path (Optional)</label>
-              <input type="text" id="mqttPath" value="" placeholder="e.g. /mqtt or empty">
-            </div>
-
-            <div class="form-group span-2">
-              <label for="mqttTopic">MQTT Topic</label>
-              <input type="text" id="mqttTopic" value="layout/clock/time" placeholder="layout/clock/time">
-              <small>Topic where your MQTT broker publishes time.</small>
-            </div>
-
-            <div class="form-group">
-              <label for="mqttClientId">Client ID</label>
-              <input type="text" id="mqttClientId" value="">
-            </div>
-
-            <div class="form-group checkbox-group">
-              <label>
-                <input type="checkbox" id="mqttUseSSL">
-                Use TLS / SSL (wss://)
-              </label>
-            </div>
-
-            <div class="form-group">
-              <label for="mqttUsername">Username (optional)</label>
-              <input type="text" id="mqttUsername" placeholder="None">
-            </div>
-
-            <div class="form-group">
-              <label for="mqttPassword">Password (optional)</label>
-              <input type="password" id="mqttPassword" placeholder="None">
-            </div>
-          </div>
-
-          <div class="mqtt-actions">
-            <button class="btn btn-primary" id="btnConnectMqtt">Connect MQTT</button>
-            <button class="btn btn-secondary" id="btnDisconnectMqtt">Disconnect</button>
-            <span class="conn-feedback" id="connFeedback"></span>
-          </div>
-
-          <!-- Live MQTT Telemetry Card -->
-          <div class="telemetry-card">
-            <div class="telemetry-title">Live MQTT Telemetry</div>
-            <div class="telemetry-grid">
-              <div class="telemetry-item">
-                <span class="f-label">Active Broker:</span>
-                <span class="f-val" id="footerBroker">Not Connected</span>
-              </div>
-              <div class="telemetry-item">
-                <span class="f-label">Topic:</span>
-                <span class="f-val" id="footerTopic">layout/clock/time</span>
-              </div>
-              <div class="telemetry-item">
-                <span class="f-label">Last Sync:</span>
-                <span class="f-val" id="footerLastSync">None</span>
-              </div>
-              <div class="telemetry-item">
-                <span class="f-label">Packets:</span>
-                <span class="f-val" id="footerMsgCount">0</span>
-              </div>
-              <div class="telemetry-item">
-                <span class="f-label">Clock State:</span>
-                <span class="f-val" id="telemetryState">ACTIVE</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="help-box">
-            <strong>Mosquitto WebSocket Tip:</strong>
-            <p>Ensure your <code>mosquitto.conf</code> has a WebSocket listener configured:</p>
-            <pre>listener 9001
-protocol websockets
-allow_anonymous true</pre>
-          </div>
-        </div>
-
-        <!-- Tab 2: Clock & Display Options -->
-        <div class="tab-pane" id="tab-clock">
+        <!-- Tab 1: Clock & Display Options (Default) -->
+        <div class="tab-pane active" id="tab-clock">
           <div class="form-grid">
             <div class="form-group span-2">
               <label for="themeSelector">Station Visual Theme</label>
@@ -404,6 +309,101 @@ allow_anonymous true</pre>
                 Show Canadian / Military inner 24-hour red dial numbers (13–24)
               </label>
             </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: MQTT Connection -->
+        <div class="tab-pane" id="tab-mqtt">
+          <p class="tab-intro">
+            Connect directly to your local MQTT broker using <strong>Eclipse Paho MQTT over WebSockets</strong>.
+          </p>
+
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label for="mqttHost">Broker Host / IP</label>
+              <input type="text" id="mqttHost" value="" placeholder="Default: where page is served">
+              <small>Leave blank to default to where the page is served.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPort">WebSocket Port</label>
+              <input type="number" id="mqttPort" value="9001" placeholder="9001">
+              <small>Default Mosquitto WS port is 9001.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPath">WS Path (Optional)</label>
+              <input type="text" id="mqttPath" value="" placeholder="e.g. /mqtt or empty">
+            </div>
+
+            <div class="form-group span-2">
+              <label for="mqttTopic">MQTT Topic</label>
+              <input type="text" id="mqttTopic" value="layout/clock/time" placeholder="layout/clock/time">
+              <small>Topic where your MQTT broker publishes time.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttClientId">Client ID</label>
+              <input type="text" id="mqttClientId" value="">
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" id="mqttUseSSL">
+                Use TLS / SSL (wss://)
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttUsername">Username (optional)</label>
+              <input type="text" id="mqttUsername" placeholder="None">
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPassword">Password (optional)</label>
+              <input type="password" id="mqttPassword" placeholder="None">
+            </div>
+          </div>
+
+          <div class="mqtt-actions">
+            <button class="btn btn-primary" id="btnConnectMqtt">Connect MQTT</button>
+            <button class="btn btn-secondary" id="btnDisconnectMqtt">Disconnect</button>
+            <span class="conn-feedback" id="connFeedback"></span>
+          </div>
+
+          <!-- Live MQTT Telemetry Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-title">Live MQTT Telemetry</div>
+            <div class="telemetry-grid">
+              <div class="telemetry-item">
+                <span class="f-label">Active Broker:</span>
+                <span class="f-val" id="footerBroker">Not Connected</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Topic:</span>
+                <span class="f-val" id="footerTopic">layout/clock/time</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Last Sync:</span>
+                <span class="f-val" id="footerLastSync">None</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Packets:</span>
+                <span class="f-val" id="footerMsgCount">0</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="f-label">Clock State:</span>
+                <span class="f-val" id="telemetryState">ACTIVE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-box">
+            <strong>Mosquitto WebSocket Tip:</strong>
+            <p>Ensure your <code>mosquitto.conf</code> has a WebSocket listener configured:</p>
+            <pre>listener 9001
+protocol websockets
+allow_anonymous true</pre>
           </div>
         </div>
       </div>
