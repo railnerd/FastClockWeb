@@ -776,9 +776,9 @@ body.hide-seconds .sec-element {
 }
 
 .modal-card {
-  width: 92vw;
-  max-width: 620px;
-  max-height: 90vh;
+  width: min(92vw, 620px);
+  height: min(85vh, 680px);
+  min-height: min(520px, 85vh);
   background: #1e1915;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 14px;
@@ -850,6 +850,7 @@ body.hide-seconds .sec-element {
   padding: 1.25rem 1.4rem;
   overflow-y: auto;
   flex: 1;
+  scrollbar-gutter: stable;
 }
 
 .tab-pane {
