@@ -86,6 +86,10 @@ body.theme-modern {
 html, body {
   width: 100%;
   height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--text-main);
@@ -94,16 +98,32 @@ html, body {
 
 .app-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure Safari / WebKit fullscreen pseudo-elements use the theme gradient without letterboxing */
+:fullscreen,
+:-webkit-full-screen {
+  background: var(--bg-gradient) !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100dvh !important;
+}
+
+::backdrop {
+  background: var(--bg-gradient) !important;
 }
 
 /* Screen Floating Controls (Settings & Fullscreen only - auto-hides on idle) */
 .screen-controls {
   position: fixed;
-  top: 1.25rem;
-  right: 1.25rem;
+  top: max(1.25rem, env(safe-area-inset-top));
+  right: max(1.25rem, env(safe-area-inset-right));
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -211,11 +231,15 @@ body.is-clock-stopped.user-idle:not(.modal-open) .screen-controls {
   align-items: center;
   justify-content: center;
   gap: 3rem;
-  padding: 2rem;
+  padding: clamp(0.75rem, 2.5vw, 2rem);
   overflow: hidden;
   position: relative;
   box-sizing: border-box;
-  --analog-diam: clamp(280px, min(46vw, calc(100vh - 40px)), 680px);
+  --analog-diam: clamp(280px, min(46vw, calc(100vh - 40px), calc(100dvh - 40px)), 680px);
+}
+
+body.is-fullscreen .clock-stage {
+  padding: clamp(0.35rem, 1.5vw, 1rem);
 }
 
 /* Single View Mode Modifiers */
@@ -1030,9 +1054,9 @@ body.hide-seconds .sec-element {
   .clock-stage {
     flex-direction: column;
     overflow-y: auto;
-    gap: 1.5rem;
-    padding: 1rem;
-    --analog-diam: clamp(200px, min(80vw, calc((100vh - 250px) / 2)), 400px);
+    gap: 1.25rem;
+    padding: 0.75rem 1rem;
+    --analog-diam: clamp(200px, min(80vw, calc((100vh - 180px) / 2), calc((100dvh - 180px) / 2)), 420px);
   }
   .digital-card {
     width: min(94vw, 580px);

@@ -1185,17 +1185,51 @@
     saveSettings();
   }
 
+  function isCurrentlyFullscreen() {
+    return !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+  }
+
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.warn('Fullscreen request failed:', err);
-      });
+    const docEl = document.documentElement;
+    if (!isCurrentlyFullscreen()) {
+      const enter =
+        docEl.requestFullscreen ||
+        docEl.webkitRequestFullscreen ||
+        docEl.webkitRequestFullScreen ||
+        docEl.msRequestFullscreen;
+      if (enter) {
+        const res = enter.call(docEl);
+        if (res && res.catch) {
+          res.catch(err => console.warn('Fullscreen request failed:', err));
+        }
+      }
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      const exit =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.webkitCancelFullScreen ||
+        document.msExitFullscreen;
+      if (exit) {
+        exit.call(document);
       }
     }
   }
+
+  function updateFullscreenClass() {
+    const isFs = isCurrentlyFullscreen();
+    if (elements.body) {
+      elements.body.classList.toggle('is-fullscreen', isFs);
+    }
+  }
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, updateFullscreenClass);
+  });
 
   let idleTimer = null;
 
