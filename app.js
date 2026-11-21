@@ -66,14 +66,39 @@
   }
 
   function loadSettings() {
+    const fileConfig = (typeof window !== 'undefined' && window.FASTCLOCK_CONFIG) ? window.FASTCLOCK_CONFIG : {};
+
+    let stored = {};
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        settings = Object.assign({}, defaultSettings, JSON.parse(stored));
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        stored = JSON.parse(raw);
       }
     } catch (e) {
       console.warn('Failed to load settings from localStorage', e);
     }
+
+    // Merge default settings, stored preferences, and config.js values
+    // config.js explicitly set values for MQTT connection take priority
+    settings = Object.assign({}, defaultSettings, stored);
+
+    if (fileConfig.mqttHost !== undefined) settings.mqttHost = fileConfig.mqttHost;
+    if (fileConfig.mqttPort !== undefined) settings.mqttPort = fileConfig.mqttPort;
+    if (fileConfig.mqttPath !== undefined) settings.mqttPath = fileConfig.mqttPath;
+    if (fileConfig.mqttTopic !== undefined) settings.mqttTopic = fileConfig.mqttTopic;
+    if (fileConfig.mqttClientId !== undefined && fileConfig.mqttClientId.trim() !== '') {
+      settings.mqttClientId = fileConfig.mqttClientId;
+    }
+    if (fileConfig.mqttUseSSL !== undefined) settings.mqttUseSSL = fileConfig.mqttUseSSL;
+    if (fileConfig.mqttUsername !== undefined) settings.mqttUsername = fileConfig.mqttUsername;
+    if (fileConfig.mqttPassword !== undefined) settings.mqttPassword = fileConfig.mqttPassword;
+
+    if (fileConfig.defaultView && !stored.viewMode) settings.viewMode = fileConfig.defaultView;
+    if (fileConfig.defaultTheme && !stored.theme) settings.theme = fileConfig.defaultTheme;
+    if (fileConfig.defaultTimeFormat && !stored.timeFormat) settings.timeFormat = fileConfig.defaultTimeFormat;
+    if (fileConfig.defaultHandMotion && !stored.handMotion) settings.handMotion = fileConfig.defaultHandMotion;
+    if (fileConfig.defaultClockRate && !stored.clockRate) settings.clockRate = fileConfig.defaultClockRate;
+
     clockState.rate = Number(settings.clockRate) || 4.0;
   }
 

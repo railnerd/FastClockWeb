@@ -48,6 +48,37 @@ xdg-open index.html
 
 ---
 
+## ⚙️ Configuration File (`config.js`)
+
+You can configure your broker host, WebSocket port, topic, and default preferences directly in [`config.js`](config.js):
+
+```javascript
+window.FASTCLOCK_CONFIG = {
+  // MQTT Broker hostname or LAN IP (e.g. 'localhost', '192.168.1.100')
+  mqttHost: 'localhost',
+
+  // WebSocket port on your MQTT broker (Mosquitto default is 9001)
+  mqttPort: 9001,
+
+  // WebSocket path (usually empty '' or '/mqtt')
+  mqttPath: '',
+
+  // MQTT Topic to subscribe to
+  mqttTopic: 'layout/clock',
+
+  // Use SSL / TLS (wss://)
+  mqttUseSSL: false,
+
+  // Optional authentication
+  mqttUsername: '',
+  mqttPassword: ''
+};
+```
+
+You can also adjust these settings dynamically at any time using the in-browser **Settings (⚙)** modal.
+
+---
+
 ## 📡 MQTT Configuration
 
 ### Mosquitto Broker Setup
