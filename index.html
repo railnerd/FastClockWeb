@@ -113,56 +113,58 @@
                   <text x="300" y="405" class="brand-jewels">21 JEWELS • ADJUSTED 5 POSITIONS</text>
                 </g>
 
-                <!-- Clock Hands Group (Rotated dynamically) -->
-                <!-- Hour Hand -->
-                <g id="hourHandGroup" filter="url(#handShadow)">
-                  <!-- Classic Railroad Spade Hour Hand -->
-                  <path class="hand-hour" d="
-                    M 294 340
-                    L 294 240
-                    C 285 235 272 215 272 190
-                    C 272 165 292 145 300 130
-                    C 308 145 328 165 328 190
-                    C 328 215 315 235 306 240
-                    L 306 340
-                    Z
-                    M 300 160
-                    C 288 175 286 195 293 205
-                    C 297 210 300 212 300 212
-                    C 300 212 303 210 307 205
-                    C 314 195 312 175 300 160
-                    Z
-                  "/>
-                </g>
+                <!-- Clock Hands Group (Deferred until MQTT sync) -->
+                <g id="clockHands" class="clock-hands">
+                  <!-- Hour Hand -->
+                  <g id="hourHandGroup" filter="url(#handShadow)">
+                    <!-- Classic Railroad Spade Hour Hand -->
+                    <path class="hand-hour" d="
+                      M 294 340
+                      L 294 240
+                      C 285 235 272 215 272 190
+                      C 272 165 292 145 300 130
+                      C 308 145 328 165 328 190
+                      C 328 215 315 235 306 240
+                      L 306 340
+                      Z
+                      M 300 160
+                      C 288 175 286 195 293 205
+                      C 297 210 300 212 300 212
+                      C 300 212 303 210 307 205
+                      C 314 195 312 175 300 160
+                      Z
+                    "/>
+                  </g>
 
-                <!-- Minute Hand -->
-                <g id="minuteHandGroup" filter="url(#handShadow)">
-                  <!-- Slender Tapered Railroad Whip/Spade Minute Hand -->
-                  <path class="hand-minute" d="
-                    M 295 350
-                    L 295 250
-                    L 292 100
-                    L 297 60
-                    L 300 45
-                    L 303 60
-                    L 308 100
-                    L 305 250
-                    L 305 350
-                    Z
-                  "/>
-                </g>
+                  <!-- Minute Hand -->
+                  <g id="minuteHandGroup" filter="url(#handShadow)">
+                    <!-- Slender Tapered Railroad Whip/Spade Minute Hand -->
+                    <path class="hand-minute" d="
+                      M 295 350
+                      L 295 250
+                      L 292 100
+                      L 297 60
+                      L 300 45
+                      L 303 60
+                      L 308 100
+                      L 305 250
+                      L 305 350
+                      Z
+                    "/>
+                  </g>
 
-                <!-- Second Hand (Red Railroad Needle with Counterweight) -->
-                <g id="secondHandGroup" filter="url(#secondShadow)">
-                  <line x1="300" y1="365" x2="300" y2="35" class="hand-second"/>
-                  <!-- Counterweight teardrop / circle -->
-                  <circle cx="300" cy="335" r="9" class="hand-second-weight"/>
-                </g>
+                  <!-- Second Hand (Red Railroad Needle with Counterweight) -->
+                  <g id="secondHandGroup" filter="url(#secondShadow)">
+                    <line x1="300" y1="365" x2="300" y2="35" class="hand-second"/>
+                    <!-- Counterweight teardrop / circle -->
+                    <circle cx="300" cy="335" r="9" class="hand-second-weight"/>
+                  </g>
 
-                <!-- Center Brass Cap -->
-                <circle cx="300" cy="300" r="11" class="center-cap-outer" fill="#443224"/>
-                <circle cx="300" cy="300" r="7" class="center-cap-mid" fill="#d4a34b"/>
-                <circle cx="300" cy="300" r="3" class="center-cap-inner" fill="#1b120c"/>
+                  <!-- Center Brass Cap -->
+                  <circle cx="300" cy="300" r="11" class="center-cap-outer" fill="#443224"/>
+                  <circle cx="300" cy="300" r="7" class="center-cap-mid" fill="#d4a34b"/>
+                  <circle cx="300" cy="300" r="3" class="center-cap-inner" fill="#1b120c"/>
+                </g>
 
                 <!-- Subtle Glass Reflection Overlay -->
                 <circle cx="300" cy="300" r="280" class="glass-glare" fill="url(#glassGlare)" pointer-events="none"/>
@@ -187,30 +189,30 @@
             <div class="digital-time-row">
               <!-- Hours -->
               <div class="digit-box">
-                <span class="digit-val" id="digHours">12</span>
+                <span class="digit-val" id="digHours">--</span>
               </div>
               <div class="digit-sep" id="colon1">:</div>
               <!-- Minutes -->
               <div class="digit-box">
-                <span class="digit-val" id="digMinutes">00</span>
+                <span class="digit-val" id="digMinutes">--</span>
               </div>
               <!-- Optional Seconds -->
               <div class="digit-sep sec-element" id="colon2">:</div>
               <div class="digit-box sec-element">
-                <span class="digit-val" id="digSeconds">00</span>
+                <span class="digit-val" id="digSeconds">--</span>
               </div>
               <!-- AM / PM / 24H Badge -->
               <div class="digit-suffix" id="digSuffixContainer">
-                <span class="suffix-elem" id="suffixAmPm">PM</span>
-                <span class="suffix-elem suffix-mode" id="suffixMode">FAST</span>
+                <span class="suffix-elem" id="suffixAmPm">--</span>
+                <span class="suffix-elem suffix-mode" id="suffixMode">SYNC</span>
               </div>
             </div>
 
             <!-- Date & Metadata Banner -->
             <div class="digital-info-row">
-              <span id="digDate">FRI, NOV 20, 2026</span>
+              <span id="digDate">WAITING FOR MQTT SYNC</span>
               <span class="meta-sep">•</span>
-              <span id="syncStatusSummary">Sync: Local Time</span>
+              <span id="syncStatusSummary">Connecting to MQTT...</span>
             </div>
           </div>
 

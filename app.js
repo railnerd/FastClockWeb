@@ -33,8 +33,9 @@
 
   // Clock Engine State
   const clockState = {
-    baseFastMs: Date.now(),
-    basePerfMs: performance.now(),
+    hasReceivedTime: false,
+    baseFastMs: 0,
+    basePerfMs: 0,
     rate: 4.0,
     isRunning: true,
     lastSyncTime: null,
@@ -127,6 +128,7 @@
     elements.dialMarkings = document.getElementById('dialMarkings');
 
     // Analog Hands
+    elements.clockHands = document.getElementById('clockHands');
     elements.hourHandGroup = document.getElementById('hourHandGroup');
     elements.minuteHandGroup = document.getElementById('minuteHandGroup');
     elements.secondHandGroup = document.getElementById('secondHandGroup');
@@ -303,15 +305,12 @@
     return new Date(fastMs);
   }
 
-  function renderClockLoop() {
-    const now = getCurrentFastTime();
-
+  function updateHandPositions(now) {
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
     const milliseconds = now.getMilliseconds();
 
-    // 1. Calculate Hand Angles
     let secondAngle, minuteAngle, hourAngle;
 
     if (settings.handMotion === 'step') {
@@ -326,7 +325,6 @@
       hourAngle = ((hours % 12) + minutes / 60 + secWithFraction / 3600) * 30;
     }
 
-    // Update Analog SVG Hands Transform
     if (elements.hourHandGroup) {
       elements.hourHandGroup.setAttribute('transform', `rotate(${hourAngle} 300 300)`);
     }
@@ -336,20 +334,31 @@
     if (elements.secondHandGroup) {
       elements.secondHandGroup.setAttribute('transform', `rotate(${secondAngle} 300 300)`);
     }
+  }
+
+  function renderClockLoop() {
+    if (!clockState.hasReceivedTime) {
+      // Defer rendering until first MQTT time packet arrives
+      requestAnimationFrame(renderClockLoop);
+      return;
+    }
+
+    const now = getCurrentFastTime();
+    updateHandPositions(now);
 
     // 2. Render Digital Clock
-    let displayHours = hours;
+    let displayHours = now.getHours();
     let ampm = '';
 
     if (settings.timeFormat === '12') {
-      ampm = hours >= 12 ? 'PM' : 'AM';
-      displayHours = hours % 12;
+      ampm = displayHours >= 12 ? 'PM' : 'AM';
+      displayHours = displayHours % 12;
       if (displayHours === 0) displayHours = 12;
     }
 
     const strHours = String(displayHours).padStart(2, '0');
-    const strMinutes = String(minutes).padStart(2, '0');
-    const strSeconds = String(seconds).padStart(2, '0');
+    const strMinutes = String(now.getMinutes()).padStart(2, '0');
+    const strSeconds = String(now.getSeconds()).padStart(2, '0');
 
     if (elements.digHours) elements.digHours.textContent = strHours;
     if (elements.digMinutes) elements.digMinutes.textContent = strMinutes;
@@ -435,6 +444,15 @@
     if (newDate && !isNaN(newDate.getTime())) {
       clockState.baseFastMs = newDate.getTime();
       clockState.basePerfMs = performance.now();
+
+      if (!clockState.hasReceivedTime) {
+        clockState.hasReceivedTime = true;
+        // Position hands immediately to received time before fading in
+        updateHandPositions(newDate);
+        if (elements.clockHands) {
+          elements.clockHands.classList.add('is-synced');
+        }
+      }
     }
 
     if (newRate !== null) {
