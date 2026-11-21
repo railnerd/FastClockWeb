@@ -772,16 +772,7 @@
 
   // --- UI & Event Handlers ---
   function bindEvents() {
-    // View Switcher Buttons
-    document.querySelectorAll('.pill-btn[data-view]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.pill-btn[data-view]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        setViewMode(btn.dataset.view);
-      });
-    });
-
-    // Theme Selector
+    // Theme Selector (inside modal)
     if (elements.themeSelector) {
       elements.themeSelector.addEventListener('change', (e) => {
         setTheme(e.target.value);
@@ -818,6 +809,13 @@
         if (target) target.classList.add('active');
       });
     });
+
+    // Display View in Modal
+    if (elements.defaultViewSelect) {
+      elements.defaultViewSelect.addEventListener('change', (e) => {
+        setViewMode(e.target.value);
+      });
+    }
 
     // Time Format in Modal
     if (elements.timeFormatSelect) {
@@ -864,9 +862,6 @@
     if (elements.defaultViewSelect) {
       elements.defaultViewSelect.value = mode;
     }
-    document.querySelectorAll('.pill-btn[data-view]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.view === mode);
-    });
     saveSettings();
   }
 
@@ -1010,11 +1005,6 @@
     setLedColor(settings.ledColor);
     setSecondsDisplay(settings.showSeconds);
     updateRateBadge(settings.clockRate);
-
-    // Update active view pill
-    document.querySelectorAll('.pill-btn[data-view]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.view === settings.viewMode);
-    });
   }
 
   // Run on DOM ready

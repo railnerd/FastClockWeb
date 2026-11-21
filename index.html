@@ -13,40 +13,20 @@
 </head>
 <body class="theme-wood">
   <div class="app-container">
-    <!-- Top Control Bar -->
-    <header class="top-bar">
-      <div class="brand">
-        <span class="brand-icon">🚂</span>
-        <span class="brand-title">FAST CLOCK</span>
-        <span class="status-pill status-disconnected" id="connectionStatusBadge">
-          <span class="status-dot"></span>
-          <span id="connectionStatusText">MQTT Disconnected</span>
-        </span>
-      </div>
+    <!-- Floating Screen Controls: ONLY Settings and Fullscreen -->
+    <div class="screen-controls">
+      <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen (F)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+      </button>
 
-      <div class="top-controls">
-        <!-- Display Mode Toggle -->
-        <div class="pill-group" role="group" aria-label="Display Mode">
-          <button class="pill-btn active" data-view="both" title="Show both railroad analog and digital">Both</button>
-          <button class="pill-btn" data-view="analog" title="Analog railroad standard clock only">Railroad</button>
-          <button class="pill-btn" data-view="digital" title="Digital clock only">Digital</button>
-        </div>
-
-        <!-- Fullscreen Button -->
-        <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen (F)">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-          </svg>
-        </button>
-
-        <!-- Settings Button -->
-        <button id="settingsBtn" class="icon-btn" title="MQTT & Clock Settings">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-          </svg>
-        </button>
-      </div>
-    </header>
+      <button id="settingsBtn" class="icon-btn" title="Settings (⚙)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </button>
+    </div>
 
     <!-- Main Display Area -->
     <main class="clock-stage" id="clockStage">
@@ -219,7 +199,13 @@
   <div class="modal-backdrop" id="settingsModal" hidden>
     <div class="modal-card">
       <div class="modal-header">
-        <h2>Settings & MQTT Configuration</h2>
+        <div class="modal-title-wrap">
+          <h2>Settings</h2>
+          <span class="status-pill status-disconnected" id="connectionStatusBadge">
+            <span class="status-dot"></span>
+            <span id="connectionStatusText">MQTT Disconnected</span>
+          </span>
+        </div>
         <button class="close-btn" id="closeSettingsBtn">&times;</button>
       </div>
 
