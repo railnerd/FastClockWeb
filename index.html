@@ -343,6 +343,15 @@ allow_anonymous true</pre>
         <div class="tab-pane" id="tab-clock">
           <div class="form-grid">
             <div class="form-group span-2">
+              <label for="defaultViewSelect">Default Display View</label>
+              <select id="defaultViewSelect">
+                <option value="both">Both Displays (Analog Railroad + Digital)</option>
+                <option value="analog">Railroad Standard Clock Only</option>
+                <option value="digital">Digital Display Only</option>
+              </select>
+            </div>
+
+            <div class="form-group span-2">
               <label for="clockHandMotion">Analog Hand Movement</label>
               <select id="clockHandMotion">
                 <option value="sweep">Continuous Smooth Sweep (60 FPS)</option>

@@ -82,6 +82,13 @@
     // config.js explicitly set values for MQTT connection take priority
     settings = Object.assign({}, defaultSettings, stored);
 
+    const savedViewMode = localStorage.getItem('fastclock_view_mode') || stored.viewMode;
+    if (savedViewMode) {
+      settings.viewMode = savedViewMode;
+    } else if (fileConfig.defaultView) {
+      settings.viewMode = fileConfig.defaultView;
+    }
+
     if (fileConfig.mqttHost !== undefined) settings.mqttHost = fileConfig.mqttHost;
     if (fileConfig.mqttPort !== undefined) settings.mqttPort = fileConfig.mqttPort;
     if (fileConfig.mqttPath !== undefined) settings.mqttPath = fileConfig.mqttPath;
@@ -93,7 +100,6 @@
     if (fileConfig.mqttUsername !== undefined) settings.mqttUsername = fileConfig.mqttUsername;
     if (fileConfig.mqttPassword !== undefined) settings.mqttPassword = fileConfig.mqttPassword;
 
-    if (fileConfig.defaultView && !stored.viewMode) settings.viewMode = fileConfig.defaultView;
     if (fileConfig.defaultTheme && !stored.theme) settings.theme = fileConfig.defaultTheme;
     if (fileConfig.defaultTimeFormat && !stored.timeFormat) settings.timeFormat = fileConfig.defaultTimeFormat;
     if (fileConfig.defaultHandMotion && !stored.handMotion) settings.handMotion = fileConfig.defaultHandMotion;
@@ -105,6 +111,9 @@
   function saveSettings() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      if (settings.viewMode) {
+        localStorage.setItem('fastclock_view_mode', settings.viewMode);
+      }
     } catch (e) {
       console.warn('Failed to save settings to localStorage', e);
     }
@@ -169,6 +178,7 @@
     elements.connFeedback = document.getElementById('connFeedback');
 
     // Clock Options Fields
+    elements.defaultViewSelect = document.getElementById('defaultViewSelect');
     elements.clockHandMotion = document.getElementById('clockHandMotion');
     elements.timeFormatSelect = document.getElementById('timeFormatSelect');
     elements.defaultRatio = document.getElementById('defaultRatio');
@@ -725,6 +735,12 @@
     } else if (mode === 'digital') {
       elements.clockStage.classList.add('view-digital');
     }
+    if (elements.defaultViewSelect) {
+      elements.defaultViewSelect.value = mode;
+    }
+    document.querySelectorAll('.pill-btn[data-view]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === mode);
+    });
     saveSettings();
   }
 
@@ -807,6 +823,7 @@
     elements.mqttUsername.value = settings.mqttUsername || '';
     elements.mqttPassword.value = settings.mqttPassword || '';
 
+    if (elements.defaultViewSelect) elements.defaultViewSelect.value = settings.viewMode;
     elements.clockHandMotion.value = settings.handMotion;
     elements.timeFormatSelect.value = settings.timeFormat;
     elements.defaultRatio.value = String(settings.clockRate);
@@ -824,6 +841,7 @@
     settings.mqttUsername = elements.mqttUsername.value.trim();
     settings.mqttPassword = elements.mqttPassword.value;
 
+    if (elements.defaultViewSelect) settings.viewMode = elements.defaultViewSelect.value;
     settings.handMotion = elements.clockHandMotion.value;
     settings.timeFormat = elements.timeFormatSelect.value;
     settings.clockRate = Number(elements.defaultRatio.value) || 4.0;
