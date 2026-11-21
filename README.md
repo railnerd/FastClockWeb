@@ -64,7 +64,7 @@ window.FASTCLOCK_CONFIG = {
   mqttPath: '',
 
   // MQTT Topic to subscribe to
-  mqttTopic: 'layout/clock',
+  mqttTopic: 'layout/clock/time',
 
   // Use SSL / TLS (wss://)
   mqttUseSSL: false,
@@ -110,7 +110,7 @@ sudo systemctl restart mosquitto
 Click the **Gear (⚙)** icon in the upper-right corner of FastClockWeb:
 - **Broker Host / IP**: `localhost` (or the LAN IP of your broker, e.g. `192.168.1.100`)
 - **WebSocket Port**: `9001`
-- **Topic**: `layout/clock` (or your custom topic)
+- **Topic**: `layout/clock/time` (or your custom topic)
 - Click **"Save & Connect"**
 
 ---

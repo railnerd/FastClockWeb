@@ -7,13 +7,13 @@
   'use strict';
 
   // --- State Configuration & Storage ---
-  const STORAGE_KEY = 'fastclock_settings_v2';
+  const STORAGE_KEY = 'fastclock_settings_v3';
   
   const defaultSettings = {
     mqttHost: 'localhost',
     mqttPort: 9001,
     mqttPath: '',
-    mqttTopic: 'layout/clock',
+    mqttTopic: 'layout/clock/time',
     mqttClientId: 'fastclock_web_' + Math.random().toString(16).substring(2, 8),
     mqttUseSSL: false,
     mqttUsername: '',
@@ -558,7 +558,7 @@
     }
 
     // Subscribe to fast clock topic
-    const topic = settings.mqttTopic.trim() || 'layout/clock';
+    const topic = settings.mqttTopic.trim() || 'layout/clock/time';
     try {
       pahoClient.subscribe(topic, { qos: 0 });
       console.log(`Subscribed to topic: ${topic}`);

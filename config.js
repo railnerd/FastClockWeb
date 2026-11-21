@@ -6,7 +6,7 @@
  */
 window.FASTCLOCK_CONFIG = {
   // MQTT Broker hostname or IP address (e.g. 'localhost', '192.168.1.100', 'raspberrypi.local')
-  mqttHost: 'localhost',
+  mqttHost: 'pi3aplus.local',
 
   // WebSocket port on your MQTT broker (default Mosquitto WebSocket port is 9001)
   mqttPort: 9001,
@@ -15,7 +15,7 @@ window.FASTCLOCK_CONFIG = {
   mqttPath: '',
 
   // MQTT Topic to subscribe to for clock / fast-clock time updates
-  mqttTopic: 'layout/clock',
+  mqttTopic: 'layout/clock/time',
 
   // Optional Client ID (leave empty to generate a random client ID)
   mqttClientId: '',
