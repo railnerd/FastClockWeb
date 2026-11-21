@@ -34,21 +34,17 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
 
 ## 🚀 Quick Start
 
-### 1. Launch the Web Application
+FastClockWeb is a **100% client-side, zero-dependency static web application**.
 
-You can serve FastClockWeb with Python's built-in web server:
+Simply open [`index.html`](index.html) directly in any web browser, or host it on any static web server (Nginx, Apache, Caddy, GitHub Pages, or a local server).
 
 ```bash
-chmod +x run.sh
-./run.sh
-```
+# macOS
+open index.html
 
-Or run:
-```bash
-python3 server.py 8080
+# Linux
+xdg-open index.html
 ```
-
-Then open your browser to: **[http://localhost:8080](http://localhost:8080)**
 
 ---
 
@@ -141,5 +137,3 @@ Seconds or milliseconds:
 - `style.css` — Responsive styles, station themes, and glowing LED display effects.
 - `app.js` — Fast clock engine, SVG dial rendering, and Eclipse Paho MQTT client logic.
 - `paho-mqtt.js` — Eclipse Paho JavaScript client library (100% offline).
-- `server.py` — Local HTTP server.
-- `run.sh` — Quick start script.
