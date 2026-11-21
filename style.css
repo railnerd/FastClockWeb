@@ -41,18 +41,19 @@ body.theme-porcelain {
 }
 
 body.theme-dispatcher {
-  --bg-gradient: radial-gradient(circle at 50% 30%, #181512 0%, #0d0b09 100%);
-  --bezel-outer: radial-gradient(circle, #26201a 0%, #15120f 85%, #080706 100%);
-  --bezel-ring: linear-gradient(135deg, #664d1f 0%, #38290e 50%, #664d1f 100%);
-  --dial-bg: #1f1b17;
-  --dial-text: #f5eedc;
-  --dial-red: #f59e0b;
-  --hand-color: #f5eedc;
-  --second-hand: #f59e0b;
+  --bg-gradient: radial-gradient(circle at 50% 30%, #191410 0%, #0d0a08 100%);
+  --bezel-outer: radial-gradient(circle, #302417 0%, #1a130b 85%, #0a0705 100%);
+  --bezel-ring: linear-gradient(135deg, #7c5c24 0%, #3e2d10 50%, #7c5c24 100%);
+  --dial-stroke: #4d3916;
+  --dial-text: #fffbeb;
+  --dial-red: #fb923c;
+  --dial-subtext: #8c734b;
+  --hand-color: #ffffff;
+  --second-hand: #fbbf24;
   --digital-frame-bg: #14110e;
   --digital-bezel: #292018;
   --led-color: #f59e0b;
-  --led-glow: rgba(245, 158, 11, 0.6);
+  --led-glow: rgba(245, 158, 11, 0.65);
   --led-inactive: rgba(245, 158, 11, 0.08);
 }
 
@@ -344,6 +345,37 @@ html, body {
   box-sizing: border-box;
 }
 
+/* SVG Dial Background Theme Support */
+.dial-background {
+  stroke: var(--dial-stroke, #221a15);
+  stroke-width: 4;
+}
+
+body.theme-wood .dial-background {
+  fill: url(#dialGradWood);
+}
+
+body.theme-porcelain .dial-background {
+  fill: url(#dialGradPorcelain);
+}
+
+body.theme-dispatcher .dial-background {
+  fill: url(#dialGradDispatcher);
+}
+
+body.theme-modern .dial-background {
+  fill: url(#dialGradModern);
+}
+
+/* Glass glare opacity per theme */
+.glass-glare {
+  opacity: 0.9;
+}
+
+body.theme-dispatcher .glass-glare {
+  opacity: 0.15; /* Dim glare on dark dispatcher dial for maximum contrast */
+}
+
 /* SVG Text & Hands Styling */
 .dial-marking-tick {
   stroke: var(--dial-text);
@@ -379,7 +411,7 @@ html, body {
   font-size: 14px;
   font-weight: bold;
   letter-spacing: 0.22em;
-  fill: var(--dial-text);
+  fill: var(--dial-subtext, var(--dial-text));
   opacity: 0.85;
 }
 
@@ -388,7 +420,7 @@ html, body {
   font-size: 9.5px;
   letter-spacing: 0.16em;
   font-weight: 600;
-  fill: var(--dial-text);
+  fill: var(--dial-subtext, var(--dial-text));
   opacity: 0.7;
 }
 
@@ -397,7 +429,7 @@ html, body {
   font-size: 9px;
   letter-spacing: 0.14em;
   font-weight: 700;
-  fill: var(--dial-text);
+  fill: var(--dial-subtext, var(--dial-text));
   opacity: 0.65;
 }
 
@@ -413,6 +445,51 @@ html, body {
 
 .hand-second-weight {
   fill: var(--second-hand);
+}
+
+/* Dispatcher Night Specific High-Contrast Enhancements */
+body.theme-dispatcher .dial-marking-tick {
+  stroke: #fef08a;
+}
+
+body.theme-dispatcher .dial-marking-hour-num {
+  fill: #ffffff;
+  font-weight: 800;
+}
+
+body.theme-dispatcher .dial-montgomery-num {
+  fill: #fef3c7;
+  font-weight: 700;
+}
+
+body.theme-dispatcher .dial-montgomery-red {
+  fill: #fb923c !important;
+  font-weight: 900;
+}
+
+body.theme-dispatcher .dial-inner-24-num {
+  fill: #f87171;
+  font-weight: 800;
+}
+
+body.theme-dispatcher .hand-hour,
+body.theme-dispatcher .hand-minute {
+  fill: #ffffff;
+  stroke: #120e0a;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.9));
+}
+
+body.theme-dispatcher .center-cap-outer {
+  fill: #3b2814;
+}
+
+body.theme-dispatcher .center-cap-mid {
+  fill: #f59e0b;
+}
+
+body.theme-dispatcher .center-cap-inner {
+  fill: #0c0805;
 }
 
 /* Digital Clock Section Styling */
