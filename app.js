@@ -396,17 +396,7 @@
         if (elements.digMinutes) elements.digMinutes.textContent = strMinutes;
         if (elements.digSeconds) elements.digSeconds.textContent = strSeconds;
         if (elements.suffixAmPm) {
-          elements.suffixAmPm.textContent = settings.timeFormat === '12' ? ampm : '24H';
-        }
-
-        // Format date string only when the day changes
-        const currentDay = now.getDate();
-        if (currentDay !== lastDigDay) {
-          lastDigDay = currentDay;
-          if (elements.digDate) {
-            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-            elements.digDate.textContent = now.toLocaleDateString(undefined, options).toUpperCase();
-          }
+          elements.suffixAmPm.textContent = settings.timeFormat === '12' ? ampm : '';
         }
       }
     }
@@ -1019,6 +1009,12 @@
       });
     }
 
+    // Auto-hide screen controls after 4s of inactivity (Tap / move wakes controls)
+    ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+    resetIdleTimer();
+
     // Fullscreen Toggle
     if (elements.fullscreenBtn) {
       elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -1201,13 +1197,35 @@
     }
   }
 
+  let idleTimer = null;
+
+  function resetIdleTimer() {
+    if (elements.body) elements.body.classList.remove('user-idle');
+    if (idleTimer) clearTimeout(idleTimer);
+    if (elements.settingsModal && !elements.settingsModal.hasAttribute('hidden')) {
+      return;
+    }
+    idleTimer = setTimeout(() => {
+      if (elements.body) elements.body.classList.add('user-idle');
+    }, 4000);
+  }
+
   function openModal() {
     populateSettingsForm();
     elements.settingsModal.removeAttribute('hidden');
+    if (elements.body) {
+      elements.body.classList.add('modal-open');
+      elements.body.classList.remove('user-idle');
+    }
+    if (idleTimer) clearTimeout(idleTimer);
   }
 
   function closeModal() {
     elements.settingsModal.setAttribute('hidden', '');
+    if (elements.body) {
+      elements.body.classList.remove('modal-open');
+    }
+    resetIdleTimer();
   }
 
   function populateSettingsForm() {

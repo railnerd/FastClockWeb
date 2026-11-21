@@ -99,7 +99,7 @@ html, body {
   overflow: hidden;
 }
 
-/* Screen Floating Controls (Settings & Fullscreen only - zero layout footprint) */
+/* Screen Floating Controls (Settings & Fullscreen only - auto-hides on idle) */
 .screen-controls {
   position: fixed;
   top: 1.25rem;
@@ -109,6 +109,20 @@ html, body {
   gap: 0.65rem;
   z-index: 999;
   pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+}
+
+body.user-idle:not(.modal-open) .screen-controls:not(:hover) {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+}
+
+/* Operational Safety: Keep stopped indicator warning visible when stopped */
+body.is-clock-stopped.user-idle:not(.modal-open) .screen-controls {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
 }
 
 .screen-controls .icon-btn {
@@ -229,10 +243,6 @@ html, body {
 
 .clock-stage.view-digital .suffix-elem {
   font-size: clamp(1.2rem, 3.5cqi, 2.2rem);
-}
-
-.clock-stage.view-digital .suffix-mode {
-  font-size: clamp(0.75rem, 2cqi, 1.2rem);
 }
 
 .clock-card {
@@ -482,26 +492,8 @@ body.theme-dispatcher .center-cap-inner {
   background: var(--digital-frame-bg);
   border: 4px solid var(--digital-bezel);
   border-radius: 18px;
-  padding: 1.2rem 1.25rem;
+  padding: 0.85rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.digital-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 0.65rem;
-}
-
-.digital-subheading {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--text-muted);
 }
 
 /* --- Fast Clock Stopped State (Screen Controls & Digital Readout) --- */
@@ -639,30 +631,17 @@ body.is-clock-stopped .digit-sep {
   flex-shrink: 0;
 }
 
+.digit-suffix:empty,
+.suffix-elem:empty {
+  display: none;
+}
+
 .suffix-elem {
   font-size: clamp(0.75rem, 4.5cqi, 1.4rem);
   font-weight: 800;
   color: var(--led-color);
   text-shadow: 0 0 8px var(--led-glow);
   line-height: 1;
-}
-
-.suffix-mode {
-  font-size: clamp(0.55rem, 3cqi, 0.85rem);
-  letter-spacing: 0.08em;
-  opacity: 0.85;
-}
-
-.digital-info-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  text-transform: uppercase;
 }
 
 /* Color picker group inside settings modal */
@@ -950,6 +929,63 @@ body.hide-seconds .sec-element {
   border-radius: 4px;
   font-family: monospace;
   color: #22c55e;
+}
+
+/* Settings Collapsible Accordions */
+.settings-accordion {
+  grid-column: span 2;
+  margin-top: 0.35rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-accordion summary {
+  padding: 0.65rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.2s ease;
+}
+
+.settings-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-accordion summary::after {
+  content: '▸';
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
+}
+
+.settings-accordion[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.settings-accordion summary:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.accordion-body {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-body.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
 }
 
 /* Buttons */
