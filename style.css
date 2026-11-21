@@ -1,0 +1,993 @@
+/* FastClock Web Application Stylesheet */
+:root {
+  --bg-gradient: radial-gradient(circle at 50% 20%, #2b1f18 0%, #17110e 100%);
+  --topbar-bg: rgba(18, 14, 12, 0.85);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --text-main: #f3efe6;
+  --text-muted: #a89f91;
+  --accent-gold: #d4a34b;
+  --accent-gold-hover: #e5b660;
+  --bezel-outer: radial-gradient(circle, #573215 0%, #2b170a 85%, #190e06 100%);
+  --bezel-ring: linear-gradient(135deg, #e3b054 0%, #7d5015 35%, #fff1b8 50%, #5e3a0d 75%, #e3b054 100%);
+  --dial-bg: #fffdf5;
+  --dial-text: #17120e;
+  --dial-red: #b91c1c;
+  --hand-color: #17120e;
+  --second-hand: #dc2626;
+  --digital-frame-bg: #1c1815;
+  --digital-bezel: #3a2c20;
+  --digital-screen-bg: #0c0b0a;
+  --led-color: #ff3333;
+  --led-glow: rgba(255, 51, 51, 0.55);
+  --led-inactive: rgba(255, 51, 51, 0.07);
+}
+
+/* Themes */
+body.theme-wood {
+  --bg-gradient: radial-gradient(circle at 50% 30%, #352317 0%, #1c110b 70%, #0d0805 100%);
+  --bezel-outer: radial-gradient(circle, #633614 0%, #3d200b 75%, #1f0f04 100%);
+  --bezel-ring: linear-gradient(135deg, #f3ca74 0%, #8c5b1b 30%, #fff7d6 50%, #633b0a 70%, #f3ca74 100%);
+}
+
+body.theme-porcelain {
+  --bg-gradient: radial-gradient(circle at 50% 30%, #20262e 0%, #11151c 100%);
+  --bezel-outer: radial-gradient(circle, #2d3748 0%, #1a202c 80%, #0f131a 100%);
+  --bezel-ring: linear-gradient(135deg, #cbd5e1 0%, #64748b 30%, #ffffff 50%, #475569 70%, #cbd5e1 100%);
+  --dial-bg: #ffffff;
+  --digital-frame-bg: #19202a;
+  --digital-bezel: #334155;
+  --accent-gold: #38bdf8;
+  --accent-gold-hover: #7dd3fc;
+}
+
+body.theme-dispatcher {
+  --bg-gradient: radial-gradient(circle at 50% 30%, #181512 0%, #0d0b09 100%);
+  --bezel-outer: radial-gradient(circle, #26201a 0%, #15120f 85%, #080706 100%);
+  --bezel-ring: linear-gradient(135deg, #664d1f 0%, #38290e 50%, #664d1f 100%);
+  --dial-bg: #1f1b17;
+  --dial-text: #f5eedc;
+  --dial-red: #f59e0b;
+  --hand-color: #f5eedc;
+  --second-hand: #f59e0b;
+  --digital-frame-bg: #14110e;
+  --digital-bezel: #292018;
+  --led-color: #f59e0b;
+  --led-glow: rgba(245, 158, 11, 0.6);
+  --led-inactive: rgba(245, 158, 11, 0.08);
+}
+
+body.theme-modern {
+  --bg-gradient: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 100%);
+  --bezel-outer: radial-gradient(circle, #334155 0%, #1e293b 80%, #0f172a 100%);
+  --bezel-ring: linear-gradient(135deg, #94a3b8 0%, #475569 50%, #94a3b8 100%);
+  --dial-bg: #f8fafc;
+  --dial-text: #0f172a;
+  --dial-red: #ef4444;
+  --digital-frame-bg: #1e293b;
+  --digital-bezel: #334155;
+  --led-color: #38bdf8;
+  --led-glow: rgba(56, 189, 248, 0.55);
+  --led-inactive: rgba(56, 189, 248, 0.07);
+}
+
+/* Reset & Basics */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  background: var(--bg-gradient);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Top Navigation Bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.25rem;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-icon {
+  font-size: 1.4rem;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent-gold);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.status-connected .status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+}
+
+.status-connecting .status-dot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Pill Group for View Switch */
+.pill-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+}
+
+.pill-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pill-btn:hover {
+  color: #fff;
+}
+
+.pill-btn.active {
+  background: var(--accent-gold);
+  color: #17110e;
+}
+
+.control-select {
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.control-select:focus {
+  border-color: var(--accent-gold);
+}
+
+.icon-btn {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+/* Main Clock Area */
+.clock-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  padding: 1.5rem 2rem;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Single View Mode Modifiers */
+.clock-stage.view-analog .digital-card {
+  display: none !important;
+}
+
+.clock-stage.view-analog .analog-card {
+  width: 85vh;
+  max-width: 90vw;
+  height: 85vh;
+}
+
+.clock-stage.view-digital .analog-card {
+  display: none !important;
+}
+
+.clock-stage.view-digital .digital-card {
+  width: 90vw;
+  max-width: 1000px;
+}
+
+.clock-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Traditional Railroad Analog Clock Styling */
+.analog-card {
+  flex: 1;
+  max-width: 580px;
+  max-height: 580px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.analog-bezel-shadow {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analog-bezel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--bezel-outer);
+  padding: 3.5%;
+  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.2), inset 0 -6px 12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analog-dial-rim {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--bezel-ring);
+  padding: 2.5%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clock-svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: visible;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+}
+
+/* SVG Text & Hands Styling */
+.dial-marking-tick {
+  stroke: var(--dial-text);
+}
+
+.dial-marking-hour-num {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+  fill: var(--dial-text);
+}
+
+.dial-montgomery-num {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  fill: var(--dial-text);
+}
+
+.dial-montgomery-red {
+  fill: var(--dial-red) !important;
+  font-weight: 800;
+}
+
+.dial-inner-24-num {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  fill: var(--dial-red);
+}
+
+.brand-hallmark {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.22em;
+  fill: var(--dial-text);
+  opacity: 0.85;
+}
+
+.brand-sub {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+  fill: var(--dial-text);
+  opacity: 0.7;
+}
+
+.brand-jewels {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  fill: var(--dial-text);
+  opacity: 0.65;
+}
+
+.hand-hour, .hand-minute {
+  fill: var(--hand-color);
+}
+
+.hand-second {
+  stroke: var(--second-hand);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.hand-second-weight {
+  fill: var(--second-hand);
+}
+
+/* Digital Clock Section Styling */
+.digital-card {
+  flex: 1;
+  max-width: 580px;
+  width: 100%;
+}
+
+.digital-frame {
+  width: 100%;
+  background: var(--digital-frame-bg);
+  border: 4px solid var(--digital-bezel);
+  border-radius: 18px;
+  padding: 1.5rem 1.8rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.digital-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.65rem;
+}
+
+.digital-subheading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.digital-rate-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--accent-gold);
+  letter-spacing: 0.08em;
+}
+
+.digital-screen {
+  background: var(--digital-screen-bg);
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85);
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle LED Matrix / Glass Scanline Effect */
+.digital-screen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18),
+    rgba(0, 0, 0, 0.18) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+}
+
+.digital-time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.digit-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.digit-val {
+  font-family: "Courier New", Courier, monospace, monospace;
+  font-size: clamp(3.2rem, 8vw, 6.2rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--led-color);
+  text-shadow: 0 0 16px var(--led-glow), 0 0 35px var(--led-glow);
+  line-height: 1;
+}
+
+.digit-sep {
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(3.2rem, 8vw, 6.2rem);
+  font-weight: 900;
+  color: var(--led-color);
+  text-shadow: 0 0 16px var(--led-glow);
+  line-height: 1;
+  animation: colonBlink 1s infinite steps(1);
+}
+
+@keyframes colonBlink {
+  50% { opacity: 0.25; }
+}
+
+.digit-suffix {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+  margin-left: 0.6rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.suffix-elem {
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  font-weight: 800;
+  color: var(--led-color);
+  text-shadow: 0 0 10px var(--led-glow);
+  line-height: 1;
+}
+
+.suffix-mode {
+  font-size: clamp(0.65rem, 1.2vw, 0.85rem);
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.digital-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.meta-sep {
+  opacity: 0.4;
+}
+
+/* Digital Toolbar */
+.digital-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 0.4rem;
+}
+
+.btn-group-sm {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tool-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tool-btn.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.color-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.color-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.color-chip:hover {
+  transform: scale(1.15);
+}
+
+.color-chip.active {
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Hide seconds helper */
+body.hide-seconds .sec-element {
+  display: none !important;
+}
+
+/* App Footer */
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.45rem 1.25rem;
+  background: rgba(12, 10, 8, 0.95);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.footer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.f-label {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.f-val {
+  color: var(--text-main);
+  font-family: monospace;
+}
+
+.flex-right {
+  margin-left: auto;
+}
+
+.text-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-gold);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.text-link-btn:hover {
+  color: var(--accent-gold-hover);
+}
+
+/* Modal Dialog */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.modal-card {
+  width: 92vw;
+  max-width: 620px;
+  max-height: 90vh;
+  background: #1e1915;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f3efe6;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.modal-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.settings-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.75rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: #fff;
+}
+
+.tab-btn.active {
+  color: var(--accent-gold);
+  border-bottom-color: var(--accent-gold);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.modal-body {
+  padding: 1.25rem 1.4rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.tab-intro {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.1rem;
+  line-height: 1.4;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="password"],
+.form-group select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--accent-gold);
+}
+
+.form-group small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.checkbox-group {
+  justify-content: center;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-transform: none;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.mqtt-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.conn-feedback {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.help-box {
+  margin-top: 1.25rem;
+  padding: 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-gold);
+  font-size: 0.78rem;
+}
+
+.help-box pre {
+  margin-top: 0.4rem;
+  padding: 0.45rem;
+  background: #111;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #22c55e;
+}
+
+/* Test Section in Modal */
+.test-section {
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.test-section h4 {
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+  margin-bottom: 0.65rem;
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.publish-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.publish-row input {
+  flex: 1;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: #fff;
+  font-family: monospace;
+}
+
+.supported-formats {
+  list-style: disc;
+  padding-left: 1.2rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.supported-formats li {
+  margin-bottom: 0.25rem;
+}
+
+.supported-formats code {
+  color: #38bdf8;
+  background: rgba(0,0,0,0.3);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--accent-gold);
+  color: #1a1208;
+}
+
+.btn-primary:hover {
+  background: var(--accent-gold-hover);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn-outline:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.modal-footer {
+  padding: 0.85rem 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+  .clock-stage {
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  .analog-card {
+    max-width: 380px;
+    max-height: 380px;
+  }
+}

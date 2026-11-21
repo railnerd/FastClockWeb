@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastClock - Railroad & Digital Time</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="paho-mqtt.js"></script>
+</head>
+<body class="theme-wood">
+  <div class="app-container">
+    <!-- Top Control Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-icon">🚂</span>
+        <span class="brand-title">FAST CLOCK</span>
+        <span class="status-pill status-disconnected" id="connectionStatusBadge">
+          <span class="status-dot"></span>
+          <span id="connectionStatusText">MQTT Disconnected</span>
+        </span>
+      </div>
+
+      <div class="top-controls">
+        <!-- Display Mode Toggle -->
+        <div class="pill-group" role="group" aria-label="Display Mode">
+          <button class="pill-btn active" data-view="both" title="Show both railroad analog and digital">Both</button>
+          <button class="pill-btn" data-view="analog" title="Analog railroad standard clock only">Railroad</button>
+          <button class="pill-btn" data-view="digital" title="Digital clock only">Digital</button>
+        </div>
+
+        <!-- Quick Theme Toggle -->
+        <select id="themeSelector" class="control-select" title="Change Theme">
+          <option value="theme-wood">Vintage Station (Wood & Brass)</option>
+          <option value="theme-porcelain">Classic Railroad Enamel</option>
+          <option value="theme-dispatcher">Dispatcher Night (Dark Amber)</option>
+          <option value="theme-modern">Modern High-Contrast</option>
+        </select>
+
+        <!-- Fullscreen Button -->
+        <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen (F)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        </button>
+
+        <!-- Settings Button -->
+        <button id="settingsBtn" class="icon-btn" title="MQTT & Clock Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Display Area -->
+    <main class="clock-stage" id="clockStage">
+      <!-- Section 1: Traditional Railroad Analog Clock -->
+      <section class="clock-card analog-card" id="analogSection">
+        <div class="analog-bezel-shadow">
+          <div class="analog-bezel">
+            <div class="analog-dial-rim">
+              <!-- SVG Railroad Clock Face -->
+              <svg id="railroadClock" viewBox="0 0 600 600" class="clock-svg" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <!-- Dial Face Gradient -->
+                  <radialGradient id="dialGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fffef6"/>
+                    <stop offset="85%" stop-color="#f5eed7"/>
+                    <stop offset="100%" stop-color="#e8dec2"/>
+                  </radialGradient>
+                  <!-- Glass Glare / Bevel Reflection -->
+                  <linearGradient id="glassGlare" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                    <stop offset="40%" stop-color="#ffffff" stop-opacity="0.05"/>
+                    <stop offset="60%" stop-color="#000000" stop-opacity="0.0"/>
+                    <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+                  </linearGradient>
+                  <!-- Drop shadow for hands -->
+                  <filter id="handShadow" x="-20%" y="-20%" width="150%" height="150%">
+                    <feDropShadow dx="3" dy="4" stdDeviation="3.5" flood-color="rgba(20,10,0,0.45)"/>
+                  </filter>
+                  <filter id="secondShadow" x="-20%" y="-20%" width="150%" height="150%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="rgba(100,0,0,0.4)"/>
+                  </filter>
+                </defs>
+
+                <!-- Dial Background -->
+                <circle cx="300" cy="300" r="280" fill="url(#dialGrad)" stroke="#221a15" stroke-width="4"/>
+
+                <!-- Railroad Montgomery Dial Ticks & Numbers Generated by Script -->
+                <g id="dialMarkings"></g>
+
+                <!-- Dial Inscription / Railroad Hallmark -->
+                <g class="dial-branding" text-anchor="middle">
+                  <text x="300" y="210" class="brand-hallmark">STANDARD RAILROAD</text>
+                  <text x="300" y="226" class="brand-sub">MONTGOMERY SAFETY DIAL</text>
+                  <text x="300" y="405" class="brand-jewels">21 JEWELS • ADJUSTED 5 POSITIONS</text>
+                </g>
+
+                <!-- Clock Hands Group (Rotated dynamically) -->
+                <!-- Hour Hand -->
+                <g id="hourHandGroup" filter="url(#handShadow)">
+                  <!-- Classic Railroad Spade Hour Hand -->
+                  <path class="hand-hour" d="
+                    M 294 340
+                    L 294 240
+                    C 285 235 272 215 272 190
+                    C 272 165 292 145 300 130
+                    C 308 145 328 165 328 190
+                    C 328 215 315 235 306 240
+                    L 306 340
+                    Z
+                    M 300 160
+                    C 288 175 286 195 293 205
+                    C 297 210 300 212 300 212
+                    C 300 212 303 210 307 205
+                    C 314 195 312 175 300 160
+                    Z
+                  "/>
+                </g>
+
+                <!-- Minute Hand -->
+                <g id="minuteHandGroup" filter="url(#handShadow)">
+                  <!-- Slender Tapered Railroad Whip/Spade Minute Hand -->
+                  <path class="hand-minute" d="
+                    M 295 350
+                    L 295 250
+                    L 292 100
+                    L 297 60
+                    L 300 45
+                    L 303 60
+                    L 308 100
+                    L 305 250
+                    L 305 350
+                    Z
+                  "/>
+                </g>
+
+                <!-- Second Hand (Red Railroad Needle with Counterweight) -->
+                <g id="secondHandGroup" filter="url(#secondShadow)">
+                  <line x1="300" y1="365" x2="300" y2="35" class="hand-second"/>
+                  <!-- Counterweight teardrop / circle -->
+                  <circle cx="300" cy="335" r="9" class="hand-second-weight"/>
+                </g>
+
+                <!-- Center Brass Cap -->
+                <circle cx="300" cy="300" r="11" fill="#443224"/>
+                <circle cx="300" cy="300" r="7" fill="#d4a34b"/>
+                <circle cx="300" cy="300" r="3" fill="#1b120c"/>
+
+                <!-- Subtle Glass Reflection Overlay -->
+                <circle cx="300" cy="300" r="280" fill="url(#glassGlare)" pointer-events="none"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Digital Clock Display -->
+      <section class="clock-card digital-card" id="digitalSection">
+        <div class="digital-frame">
+          <div class="digital-header">
+            <span class="digital-subheading">RAILROAD FAST CLOCK DISPATCH</span>
+            <div class="digital-rate-badge" id="rateBadge">
+              RATE: <strong id="clockRateText">1.0x</strong>
+            </div>
+          </div>
+
+          <!-- Digital Readout Display -->
+          <div class="digital-screen" id="digitalScreen">
+            <div class="digital-time-row">
+              <!-- Hours -->
+              <div class="digit-box">
+                <span class="digit-val" id="digHours">12</span>
+              </div>
+              <div class="digit-sep" id="colon1">:</div>
+              <!-- Minutes -->
+              <div class="digit-box">
+                <span class="digit-val" id="digMinutes">00</span>
+              </div>
+              <!-- Optional Seconds -->
+              <div class="digit-sep sec-element" id="colon2">:</div>
+              <div class="digit-box sec-element">
+                <span class="digit-val" id="digSeconds">00</span>
+              </div>
+              <!-- AM / PM / 24H Badge -->
+              <div class="digit-suffix" id="digSuffixContainer">
+                <span class="suffix-elem" id="suffixAmPm">PM</span>
+                <span class="suffix-elem suffix-mode" id="suffixMode">FAST</span>
+              </div>
+            </div>
+
+            <!-- Date & Metadata Banner -->
+            <div class="digital-info-row">
+              <span id="digDate">FRI, NOV 20, 2026</span>
+              <span class="meta-sep">•</span>
+              <span id="syncStatusSummary">Sync: Local Time</span>
+            </div>
+          </div>
+
+          <!-- Quick Digital Customization Controls -->
+          <div class="digital-toolbar">
+            <div class="btn-group-sm">
+              <button class="tool-btn active" id="btn12h">12H</button>
+              <button class="tool-btn" id="btn24h">24H</button>
+            </div>
+            <div class="btn-group-sm">
+              <button class="tool-btn active" id="btnToggleSeconds">SEC ON</button>
+            </div>
+            <div class="color-picker-group">
+              <span class="color-label">LED:</span>
+              <button class="color-chip active" data-color="red" style="background:#ff2b2b;" title="Railroad Signal Red"></button>
+              <button class="color-chip" data-color="amber" style="background:#ffb000;" title="Dispatcher Amber"></button>
+              <button class="color-chip" data-color="green" style="background:#2aff6b;" title="Highball Green"></button>
+              <button class="color-chip" data-color="blue" style="background:#38bdf8;" title="Ice Blue"></button>
+              <button class="color-chip" data-color="white" style="background:#f1f5f9;" title="Cool White"></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer telemetry bar -->
+    <footer class="app-footer">
+      <div class="footer-item">
+        <span class="f-label">Broker:</span>
+        <span class="f-val" id="footerBroker">ws://localhost:9001</span>
+      </div>
+      <div class="footer-item">
+        <span class="f-label">Topic:</span>
+        <span class="f-val" id="footerTopic">layout/clock</span>
+      </div>
+      <div class="footer-item">
+        <span class="f-label">Last Packet:</span>
+        <span class="f-val" id="footerLastSync">None</span>
+      </div>
+      <div class="footer-item">
+        <span class="f-label">Messages:</span>
+        <span class="f-val" id="footerMsgCount">0</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Settings Modal Dialog -->
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Settings & MQTT Configuration</h2>
+        <button class="close-btn" id="closeSettingsBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="settings-tabs">
+          <button class="tab-btn active" data-tab="tab-mqtt">MQTT Connection</button>
+          <button class="tab-btn" data-tab="tab-clock">Clock Options</button>
+        </div>
+
+        <!-- Tab 1: MQTT Connection -->
+        <div class="tab-pane active" id="tab-mqtt">
+          <p class="tab-intro">
+            Connect directly to your local MQTT broker using <strong>Eclipse Paho MQTT over WebSockets</strong>.
+          </p>
+
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label for="mqttHost">Broker Host / IP</label>
+              <input type="text" id="mqttHost" value="localhost" placeholder="localhost or 192.168.1.50">
+              <small>Host running your local Mosquitto, EMQX, or Home Assistant broker.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPort">WebSocket Port</label>
+              <input type="number" id="mqttPort" value="9001" placeholder="9001">
+              <small>Default Mosquitto WS port is 9001.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPath">WS Path (Optional)</label>
+              <input type="text" id="mqttPath" value="" placeholder="e.g. /mqtt or empty">
+            </div>
+
+            <div class="form-group span-2">
+              <label for="mqttTopic">MQTT Topic</label>
+              <input type="text" id="mqttTopic" value="layout/clock" placeholder="layout/clock">
+              <small>Topic where your MQTT broker publishes time.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttClientId">Client ID</label>
+              <input type="text" id="mqttClientId" value="">
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" id="mqttUseSSL">
+                Use TLS / SSL (wss://)
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="mqttUsername">Username (optional)</label>
+              <input type="text" id="mqttUsername" placeholder="None">
+            </div>
+
+            <div class="form-group">
+              <label for="mqttPassword">Password (optional)</label>
+              <input type="password" id="mqttPassword" placeholder="None">
+            </div>
+          </div>
+
+          <div class="mqtt-actions">
+            <button class="btn btn-primary" id="btnConnectMqtt">Connect MQTT</button>
+            <button class="btn btn-secondary" id="btnDisconnectMqtt">Disconnect</button>
+            <span class="conn-feedback" id="connFeedback"></span>
+          </div>
+
+          <div class="help-box">
+            <strong>Mosquitto WebSocket Tip:</strong>
+            <p>Ensure your <code>mosquitto.conf</code> has a WebSocket listener configured:</p>
+            <pre>listener 9001
+protocol websockets
+allow_anonymous true</pre>
+          </div>
+        </div>
+
+        <!-- Tab 2: Clock Options -->
+        <div class="tab-pane" id="tab-clock">
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label for="clockHandMotion">Analog Hand Movement</label>
+              <select id="clockHandMotion">
+                <option value="sweep">Continuous Smooth Sweep (60 FPS)</option>
+                <option value="step">Stepped Tick (1 second steps)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="timeFormatSelect">Time Format</label>
+              <select id="timeFormatSelect">
+                <option value="12">12-Hour (AM/PM)</option>
+                <option value="24">24-Hour (Railroad Standard)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="defaultRatio">Default Fast Clock Ratio</label>
+              <select id="defaultRatio">
+                <option value="1">1:1 (Real Time)</option>
+                <option value="2">2:1 Fast Clock</option>
+                <option value="3">3:1 Fast Clock</option>
+                <option value="4" selected>4:1 Fast Clock (Typical Railroad)</option>
+                <option value="5">5:1 Fast Clock</option>
+                <option value="6">6:1 Fast Clock</option>
+                <option value="8">8:1 Fast Clock</option>
+              </select>
+            </div>
+
+            <div class="form-group span-2">
+              <label>
+                <input type="checkbox" id="showMontgomeryNumbers" checked>
+                Show Montgomery Dial individual minute rim numbers (1–60)
+              </label>
+            </div>
+
+            <div class="form-group span-2">
+              <label>
+                <input type="checkbox" id="showCanadianInner24" checked>
+                Show Canadian / Military inner 24-hour red dial numbers (13–24)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="saveAndCloseBtn">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
