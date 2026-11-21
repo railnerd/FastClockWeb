@@ -7,9 +7,7 @@
 window.FASTCLOCK_CONFIG = {
   // MQTT Broker hostname or IP address.
   // Optional: Leave empty '' to default directly to where the page is being served (window.location.hostname).
-  // If the specified broker cannot be reached, FastClock automatically cascades to:
-  //   1. The serving host (where the page is hosted)
-  //   2. 'localhost'
+  // If the specified broker cannot be reached, FastClock automatically falls back to the serving host.
   mqttHost: '',
 
   // WebSocket port on your MQTT broker (default Mosquitto WebSocket port is 9001)

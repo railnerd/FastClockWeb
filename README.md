@@ -29,10 +29,9 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
 - **Eclipse Paho MQTT Client**:
   - Connects directly from the browser to your local MQTT broker via WebSockets (`ws://` or `wss://`).
   - **Zero Configuration Required**: Works out of the box with built-in defaults—no `config.js` required.
-  - **Multi-Tier Broker Fallback**:
+  - **Serving Host Default & Fallback**:
     1. Primary host configured in `config.js` or in the Settings modal
-    2. Host where the page is being served (`window.location.hostname`) if primary cannot be reached
-    3. `localhost` fallback if both above are unreachable
+    2. Host where the page is being served (`window.location.hostname`) if the primary host cannot be reached
   - Automatic reconnection with backoff.
 
 ---
@@ -56,7 +55,7 @@ xdg-open index.html
 ## ⚙️ Configuration File (`config.js`, Optional)
 
 **No configuration file is required!** FastClockWeb automatically connects using sensible defaults:
-- **Broker Host**: Defaults to where the page is served (`window.location.hostname`), with fallback to `localhost`.
+- **Broker Host**: Defaults to where the page is served (`window.location.hostname`).
 - **Port**: `9001` (standard WebSocket port)
 - **Topic**: `layout/clock/time`
 

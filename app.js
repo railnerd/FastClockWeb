@@ -10,15 +10,19 @@
   const STORAGE_KEY = 'fastclock_settings_v5';
   
   function getServingHost() {
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      const h = window.location.hostname.trim();
-      if (h) return h;
+    if (typeof window !== 'undefined' && window.location) {
+      if (window.location.hostname && window.location.hostname.trim()) {
+        return window.location.hostname.trim();
+      }
+      if (window.location.protocol === 'file:') {
+        return 'localhost';
+      }
     }
-    return 'localhost';
+    return '';
   }
 
   const defaultSettings = {
-    mqttHost: '', // Empty defaults to serving host (getServingHost()), falling back to localhost
+    mqttHost: '', // Empty defaults dynamically to serving host (getServingHost())
     mqttPort: 9001,
     mqttPath: '',
     mqttTopic: 'layout/clock/time',
@@ -559,7 +563,6 @@
    * Generates candidate broker hosts in prioritized order:
    * 1. Explicitly configured host (from config.js or settings modal)
    * 2. Host where page is being served (getServingHost())
-   * 3. 'localhost'
    */
   function getCandidateHosts() {
     const list = [];
@@ -576,15 +579,6 @@
       list.push(servingHost);
     }
 
-    // 3. Fallback to localhost if not already in the list
-    if (!list.includes('localhost') && !list.includes('127.0.0.1')) {
-      list.push('localhost');
-    }
-
-    if (list.length === 0) {
-      list.push('localhost');
-    }
-
     return list;
   }
 
@@ -597,6 +591,11 @@
     }
 
     const candidateHosts = getCandidateHosts();
+    if (candidateHosts.length === 0) {
+      updateStatusBadge('disconnected', 'No Host Configured');
+      return;
+    }
+
     hostAttemptIndex = (attemptIndex >= 0 && attemptIndex < candidateHosts.length) ? attemptIndex : 0;
     activeHost = candidateHosts[hostAttemptIndex];
 
@@ -692,7 +691,7 @@
     const candidateHosts = getCandidateHosts();
     const nextIndex = hostAttemptIndex + 1;
 
-    // If there is another fallback host in the cascade (serving host or localhost):
+    // If there is another fallback host in the cascade (serving host):
     if (nextIndex < candidateHosts.length) {
       const nextHost = candidateHosts[nextIndex];
       console.log(`Could not reach '${activeHost}'. Falling back to '${nextHost}'...`);
