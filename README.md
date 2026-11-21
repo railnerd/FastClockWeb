@@ -28,7 +28,8 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
 
 - **Eclipse Paho MQTT Client**:
   - Connects directly from the browser to your local MQTT broker via WebSockets (`ws://` or `wss://`).
-  - Automatic reconnection with exponential backoff.
+  - Automatic fallback to `localhost` if the configured hostname cannot be resolved or is unreachable.
+  - Automatic reconnection with backoff.
 
 ---
 

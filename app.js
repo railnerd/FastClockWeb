@@ -47,6 +47,8 @@
   let isConnecting = false;
   let isConnected = false;
   let reconnectTimer = null;
+  let activeHost = null;
+  let triedFallbackToLocalhost = false;
 
   // DOM Elements Cache
   const elements = {};
@@ -521,7 +523,7 @@
   }
 
   // --- Eclipse Paho MQTT Integration ---
-  function connectMqtt() {
+  function connectMqtt(useFallbackHost = false) {
     if (isConnecting || isConnected) return;
 
     if (typeof Paho === 'undefined' || !Paho.MQTT || !Paho.MQTT.Client) {
@@ -529,23 +531,34 @@
       return;
     }
 
-    updateStatusBadge('connecting', 'Connecting...');
+    const primaryHost = settings.mqttHost.trim() || 'localhost';
+
+    if (useFallbackHost) {
+      activeHost = 'localhost';
+      triedFallbackToLocalhost = true;
+      updateStatusBadge('connecting', 'Trying localhost...');
+    } else {
+      activeHost = primaryHost;
+      triedFallbackToLocalhost = (primaryHost.toLowerCase() === 'localhost' || primaryHost === '127.0.0.1');
+      updateStatusBadge('connecting', 'Connecting...');
+    }
+
     isConnecting = true;
 
-    const host = settings.mqttHost.trim() || 'localhost';
     const port = Number(settings.mqttPort) || 9001;
     const path = settings.mqttPath ? (settings.mqttPath.startsWith('/') ? settings.mqttPath : '/' + settings.mqttPath) : '';
     const clientId = settings.mqttClientId.trim() || ('fastclock_' + Math.random().toString(16).substr(2, 6));
 
     if (elements.footerBroker) {
-      elements.footerBroker.textContent = `${settings.mqttUseSSL ? 'wss' : 'ws'}://${host}:${port}${path}`;
+      const fallbackTag = (activeHost !== primaryHost) ? ' (fallback)' : '';
+      elements.footerBroker.textContent = `${settings.mqttUseSSL ? 'wss' : 'ws'}://${activeHost}:${port}${path}${fallbackTag}`;
     }
     if (elements.footerTopic) {
       elements.footerTopic.textContent = settings.mqttTopic;
     }
 
     try {
-      pahoClient = new Paho.MQTT.Client(host, port, path, clientId);
+      pahoClient = new Paho.MQTT.Client(activeHost, port, path, clientId);
 
       pahoClient.onConnectionLost = onConnectionLost;
       pahoClient.onMessageArrived = onMessageArrived;
@@ -554,7 +567,7 @@
         useSSL: !!settings.mqttUseSSL,
         cleanSession: true,
         keepAliveInterval: 30,
-        timeout: 5,
+        timeout: 4, // 4-second timeout to quickly fallback if hostname cannot be resolved
         onSuccess: onConnectSuccess,
         onFailure: onConnectFailure
       };
@@ -570,18 +583,23 @@
     } catch (err) {
       isConnecting = false;
       isConnected = false;
-      updateStatusBadge('disconnected', 'Config Error');
-      console.error('MQTT setup error:', err);
+      console.error(`MQTT setup error for ${activeHost}:`, err);
+      handleHostFailure(err.message || 'Config Error');
     }
   }
 
   function onConnectSuccess() {
     isConnecting = false;
     isConnected = true;
-    updateStatusBadge('connected', 'MQTT Connected');
+    const primaryHost = settings.mqttHost.trim() || 'localhost';
+    const isFallback = (activeHost !== primaryHost);
+
+    updateStatusBadge('connected', isFallback ? 'MQTT Connected (localhost)' : 'MQTT Connected');
 
     if (elements.connFeedback) {
-      elements.connFeedback.textContent = 'Connected successfully!';
+      elements.connFeedback.textContent = isFallback
+        ? `Connected via fallback to localhost:${settings.mqttPort}!`
+        : `Connected to ${activeHost}:${settings.mqttPort}!`;
       elements.connFeedback.style.color = '#22c55e';
     }
 
@@ -589,7 +607,7 @@
     const topic = settings.mqttTopic.trim() || 'layout/clock/time';
     try {
       pahoClient.subscribe(topic, { qos: 0 });
-      console.log(`Subscribed to topic: ${topic}`);
+      console.log(`Subscribed to topic: ${topic} on ${activeHost}`);
     } catch (e) {
       console.error('Subscription error:', e);
     }
@@ -599,10 +617,30 @@
     isConnecting = false;
     isConnected = false;
     const msg = (responseObject && responseObject.errorMessage) ? responseObject.errorMessage : 'Connection failed';
-    updateStatusBadge('disconnected', 'MQTT Offline');
+    console.warn(`MQTT connection failed on ${activeHost}: ${msg}`);
+    handleHostFailure(msg);
+  }
 
+  function handleHostFailure(errorMessage) {
+    const primaryHost = settings.mqttHost.trim() || 'localhost';
+
+    // If primary host failed to resolve or connect, automatically attempt fallback to localhost
+    if (!triedFallbackToLocalhost && activeHost !== 'localhost' && activeHost !== '127.0.0.1') {
+      console.log(`Could not reach '${activeHost}'. Falling back to 'localhost'...`);
+      if (elements.connFeedback) {
+        elements.connFeedback.textContent = `Could not reach ${activeHost}. Trying localhost...`;
+        elements.connFeedback.style.color = '#f59e0b';
+      }
+      setTimeout(() => {
+        connectMqtt(true);
+      }, 500);
+      return;
+    }
+
+    // Both primary host and localhost failed
+    updateStatusBadge('disconnected', 'MQTT Offline');
     if (elements.connFeedback) {
-      elements.connFeedback.textContent = `Failed: ${msg}`;
+      elements.connFeedback.textContent = `Failed (${activeHost}): ${errorMessage}`;
       elements.connFeedback.style.color = '#ef4444';
     }
 
@@ -629,6 +667,7 @@
   }
 
   function disconnectMqtt() {
+    triedFallbackToLocalhost = false;
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
@@ -652,8 +691,8 @@
   function scheduleReconnect() {
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {
-      console.log('Attempting MQTT auto-reconnect...');
-      connectMqtt();
+      console.log('Attempting MQTT auto-reconnect (retrying configured host)...');
+      connectMqtt(false);
     }, 6000);
   }
 
