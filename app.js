@@ -198,6 +198,7 @@
   function renderDialMarkings() {
     const g = elements.dialMarkings;
     g.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     const cx = 300;
     const cy = 300;
 
@@ -220,7 +221,7 @@
       line.setAttribute('y2', y2);
       line.setAttribute('stroke-width', isFiveMin ? '3.5' : '1.5');
       line.setAttribute('class', 'dial-marking-tick');
-      g.appendChild(line);
+      fragment.appendChild(line);
 
       // Montgomery individual minute numerals (1 to 60) along the outer perimeter
       if (settings.showMontgomery) {
@@ -235,7 +236,7 @@
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('class', isFiveMin ? 'dial-montgomery-num dial-montgomery-red' : 'dial-montgomery-num');
         text.textContent = mNum;
-        g.appendChild(text);
+        fragment.appendChild(text);
       }
     }
 
@@ -248,7 +249,7 @@
     circleOuter.setAttribute('stroke', 'currentColor');
     circleOuter.setAttribute('stroke-width', '2');
     circleOuter.setAttribute('class', 'dial-marking-tick');
-    g.appendChild(circleOuter);
+    fragment.appendChild(circleOuter);
 
     const circleInner = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circleInner.setAttribute('cx', cx);
@@ -258,7 +259,7 @@
     circleInner.setAttribute('stroke', 'currentColor');
     circleInner.setAttribute('stroke-width', '1.5');
     circleInner.setAttribute('class', 'dial-marking-tick');
-    g.appendChild(circleInner);
+    fragment.appendChild(circleInner);
 
     // 2. Bold Hour Numerals 1 to 12
     const rHour = 192;
@@ -274,7 +275,7 @@
       text.setAttribute('font-size', '50');
       text.setAttribute('class', 'dial-marking-hour-num');
       text.textContent = h;
-      g.appendChild(text);
+      fragment.appendChild(text);
     }
 
     // 3. Canadian / Military Inner 24-Hour Ring (13 to 24)
@@ -292,9 +293,11 @@
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('class', 'dial-inner-24-num');
         text.textContent = num24;
-        g.appendChild(text);
+        fragment.appendChild(text);
       }
     }
+
+    g.appendChild(fragment);
   }
 
   // --- Clock Animation & Render Loop ---
@@ -338,6 +341,10 @@
     }
   }
 
+  // Cached digital render values to prevent DOM churn
+  let lastDigSec = -1;
+  let lastDigDay = -1;
+
   function renderClockLoop() {
     if (!clockState.hasReceivedTime) {
       // Defer rendering until first MQTT time packet arrives
@@ -346,33 +353,48 @@
     }
 
     const now = getCurrentFastTime();
-    updateHandPositions(now);
 
-    // 2. Render Digital Clock
-    let displayHours = now.getHours();
-    let ampm = '';
-
-    if (settings.timeFormat === '12') {
-      ampm = displayHours >= 12 ? 'PM' : 'AM';
-      displayHours = displayHours % 12;
-      if (displayHours === 0) displayHours = 12;
+    // 1. Render Analog Hands only when analog view is active
+    if (settings.viewMode !== 'digital') {
+      updateHandPositions(now);
     }
 
-    const strHours = String(displayHours).padStart(2, '0');
-    const strMinutes = String(now.getMinutes()).padStart(2, '0');
-    const strSeconds = String(now.getSeconds()).padStart(2, '0');
+    // 2. Render Digital Clock only when digital view is active
+    if (settings.viewMode !== 'analog') {
+      const currentSec = now.getSeconds();
+      if (currentSec !== lastDigSec) {
+        lastDigSec = currentSec;
 
-    if (elements.digHours) elements.digHours.textContent = strHours;
-    if (elements.digMinutes) elements.digMinutes.textContent = strMinutes;
-    if (elements.digSeconds) elements.digSeconds.textContent = strSeconds;
-    if (elements.suffixAmPm) {
-      elements.suffixAmPm.textContent = settings.timeFormat === '12' ? ampm : '24H';
-    }
+        let displayHours = now.getHours();
+        let ampm = '';
 
-    // Date String
-    if (elements.digDate) {
-      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-      elements.digDate.textContent = now.toLocaleDateString(undefined, options).toUpperCase();
+        if (settings.timeFormat === '12') {
+          ampm = displayHours >= 12 ? 'PM' : 'AM';
+          displayHours = displayHours % 12;
+          if (displayHours === 0) displayHours = 12;
+        }
+
+        const strHours = String(displayHours).padStart(2, '0');
+        const strMinutes = String(now.getMinutes()).padStart(2, '0');
+        const strSeconds = String(currentSec).padStart(2, '0');
+
+        if (elements.digHours) elements.digHours.textContent = strHours;
+        if (elements.digMinutes) elements.digMinutes.textContent = strMinutes;
+        if (elements.digSeconds) elements.digSeconds.textContent = strSeconds;
+        if (elements.suffixAmPm) {
+          elements.suffixAmPm.textContent = settings.timeFormat === '12' ? ampm : '24H';
+        }
+
+        // Format date string only when the day changes
+        const currentDay = now.getDate();
+        if (currentDay !== lastDigDay) {
+          lastDigDay = currentDay;
+          if (elements.digDate) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            elements.digDate.textContent = now.toLocaleDateString(undefined, options).toUpperCase();
+          }
+        }
+      }
     }
 
     // Loop continuously
@@ -810,6 +832,7 @@
 
   function setTimeFormat(fmt) {
     settings.timeFormat = fmt;
+    lastDigSec = -1; // Force immediate digital display refresh
     if (elements.btn12h) elements.btn12h.classList.toggle('active', fmt === '12');
     if (elements.btn24h) elements.btn24h.classList.toggle('active', fmt === '24');
     if (elements.timeFormatSelect) elements.timeFormatSelect.value = fmt;
