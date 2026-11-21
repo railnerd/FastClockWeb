@@ -196,6 +196,8 @@
     elements.timeFormatSelect = document.getElementById('timeFormatSelect');
     elements.showSecondsCheck = document.getElementById('showSecondsCheck');
     elements.currentColorLabel = document.getElementById('currentColorLabel');
+    elements.ledColorFormGroup = document.getElementById('ledColorFormGroup');
+    elements.digitalSecondsFormGroup = document.getElementById('digitalSecondsFormGroup');
     elements.defaultRatio = document.getElementById('defaultRatio');
     elements.btnToggleClockState = document.getElementById('btnToggleClockState');
     elements.showMontgomeryNumbers = document.getElementById('showMontgomeryNumbers');
@@ -1120,7 +1122,18 @@
     if (elements.defaultViewSelect) {
       elements.defaultViewSelect.value = mode;
     }
+    updateViewOptionVisibility(mode);
     saveSettings();
+  }
+
+  function updateViewOptionVisibility(mode) {
+    const isDigitalActive = (mode === 'both' || mode === 'digital');
+    if (elements.ledColorFormGroup) {
+      elements.ledColorFormGroup.style.display = isDigitalActive ? '' : 'none';
+    }
+    if (elements.digitalSecondsFormGroup) {
+      elements.digitalSecondsFormGroup.style.display = isDigitalActive ? '' : 'none';
+    }
   }
 
   function setTheme(theme) {
@@ -1211,6 +1224,7 @@
 
     if (elements.themeSelector) elements.themeSelector.value = settings.theme;
     if (elements.defaultViewSelect) elements.defaultViewSelect.value = settings.viewMode;
+    updateViewOptionVisibility(settings.viewMode);
     elements.clockHandMotion.value = settings.handMotion;
     elements.timeFormatSelect.value = settings.timeFormat;
     if (elements.showSecondsCheck) elements.showSecondsCheck.checked = settings.showSeconds;
