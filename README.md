@@ -28,7 +28,8 @@ A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatc
 
 - **Eclipse Paho MQTT Client**:
   - Connects directly from the browser to your local MQTT broker via WebSockets (`ws://` or `wss://`).
-  - Automatic fallback to `localhost` if the configured hostname cannot be resolved or is unreachable.
+  - **Dynamic Broker Host**: Automatically defaults to the host where the page is being served (`window.location.hostname`), making it plug-and-play when served from a Raspberry Pi, layout server, or local PC.
+  - Automatic fallback to `localhost` if opened as a local file (`file:///`) or if the host cannot be reached.
   - Automatic reconnection with backoff.
 
 ---
@@ -61,8 +62,8 @@ You can configure your broker host, WebSocket port, topic, and default preferenc
 
 ```javascript
 window.FASTCLOCK_CONFIG = {
-  // MQTT Broker hostname or LAN IP (e.g. 'localhost', '192.168.1.100')
-  mqttHost: 'localhost',
+  // MQTT Broker hostname or LAN IP (leave empty '' to default to where the page is served)
+  mqttHost: '',
 
   // WebSocket port on your MQTT broker (Mosquitto default is 9001)
   mqttPort: 9001,
@@ -115,7 +116,7 @@ sudo systemctl restart mosquitto
 
 ### In FastClockWeb Settings
 Click the **Gear (⚙)** icon in the upper-right corner of FastClockWeb:
-- **Broker Host / IP**: `localhost` (or the LAN IP of your broker, e.g. `192.168.1.100`)
+- **Broker Host / IP**: Defaults to where the page is being served (or LAN IP/`localhost`)
 - **WebSocket Port**: `9001`
 - **Topic**: `layout/clock/time` (or your custom topic)
 - Click **"Save & Connect"**

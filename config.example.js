@@ -5,8 +5,10 @@
  * This file is loaded automatically when FastClockWeb starts.
  */
 window.FASTCLOCK_CONFIG = {
-  // MQTT Broker hostname or IP address (e.g. 'localhost', '192.168.1.100', 'raspberrypi.local')
-  mqttHost: 'localhost',
+  // MQTT Broker hostname or IP address.
+  // Leave empty '' to automatically default to where the page is being served (window.location.hostname),
+  // or set explicitly (e.g. 'localhost', '192.168.1.100', 'raspberrypi.local')
+  mqttHost: '',
 
   // WebSocket port on your MQTT broker (default Mosquitto WebSocket port is 9001)
   mqttPort: 9001,

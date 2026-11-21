@@ -7,10 +7,18 @@
   'use strict';
 
   // --- State Configuration & Storage ---
-  const STORAGE_KEY = 'fastclock_settings_v3';
+  const STORAGE_KEY = 'fastclock_settings_v4';
   
+  function getServingHost() {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      const h = window.location.hostname.trim();
+      if (h) return h;
+    }
+    return 'localhost';
+  }
+
   const defaultSettings = {
-    mqttHost: 'localhost',
+    mqttHost: getServingHost(),
     mqttPort: 9001,
     mqttPath: '',
     mqttTopic: 'layout/clock/time',
@@ -92,7 +100,10 @@
       settings.viewMode = fileConfig.defaultView;
     }
 
-    if (fileConfig.mqttHost !== undefined) settings.mqttHost = fileConfig.mqttHost;
+    if (fileConfig.mqttHost !== undefined) {
+      const fHost = String(fileConfig.mqttHost).trim();
+      settings.mqttHost = fHost || getServingHost();
+    }
     if (fileConfig.mqttPort !== undefined) settings.mqttPort = fileConfig.mqttPort;
     if (fileConfig.mqttPath !== undefined) settings.mqttPath = fileConfig.mqttPath;
     if (fileConfig.mqttTopic !== undefined) settings.mqttTopic = fileConfig.mqttTopic;
@@ -553,7 +564,8 @@
       return;
     }
 
-    const primaryHost = settings.mqttHost.trim() || 'localhost';
+    const servingHost = getServingHost();
+    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || servingHost;
 
     if (useFallbackHost) {
       activeHost = 'localhost';
@@ -613,7 +625,7 @@
   function onConnectSuccess() {
     isConnecting = false;
     isConnected = true;
-    const primaryHost = settings.mqttHost.trim() || 'localhost';
+    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || getServingHost();
     const isFallback = (activeHost !== primaryHost);
 
     updateStatusBadge('connected', isFallback ? 'MQTT Connected (localhost)' : 'MQTT Connected');
@@ -644,7 +656,7 @@
   }
 
   function handleHostFailure(errorMessage) {
-    const primaryHost = settings.mqttHost.trim() || 'localhost';
+    const primaryHost = (settings.mqttHost && settings.mqttHost.trim()) || getServingHost();
 
     // If primary host failed to resolve or connect, automatically attempt fallback to localhost
     if (!triedFallbackToLocalhost && activeHost !== 'localhost' && activeHost !== '127.0.0.1') {
@@ -894,7 +906,9 @@
   }
 
   function populateSettingsForm() {
-    elements.mqttHost.value = settings.mqttHost;
+    const servingHost = getServingHost();
+    elements.mqttHost.value = settings.mqttHost || servingHost;
+    elements.mqttHost.placeholder = servingHost;
     elements.mqttPort.value = settings.mqttPort;
     elements.mqttPath.value = settings.mqttPath;
     elements.mqttTopic.value = settings.mqttTopic;
@@ -912,7 +926,7 @@
   }
 
   function saveFormToSettings() {
-    settings.mqttHost = elements.mqttHost.value.trim();
+    settings.mqttHost = elements.mqttHost.value.trim() || getServingHost();
     settings.mqttPort = Number(elements.mqttPort.value) || 9001;
     settings.mqttPath = elements.mqttPath.value.trim();
     settings.mqttTopic = elements.mqttTopic.value.trim();
