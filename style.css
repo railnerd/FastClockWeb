@@ -254,9 +254,11 @@ html, body {
 }
 
 .clock-stage.view-analog .analog-card {
-  width: 85vh;
-  max-width: 90vw;
-  height: 85vh;
+  width: min(85vh, 85vw);
+  height: min(85vh, 85vw);
+  max-width: min(85vh, 85vw);
+  max-height: min(85vh, 85vw);
+  aspect-ratio: 1 / 1;
 }
 
 .clock-stage.view-digital .analog-card {
@@ -275,28 +277,35 @@ html, body {
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Traditional Railroad Analog Clock Styling */
+/* Traditional Railroad Analog Clock Styling (Always a True Circle) */
 .analog-card {
-  flex: 1;
+  flex: 0 1 auto;
+  aspect-ratio: 1 / 1;
+  width: min(48vw, calc(100vh - 120px));
+  height: min(48vw, calc(100vh - 120px));
   max-width: 580px;
   max-height: 580px;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  min-width: 240px;
+  min-height: 240px;
+  margin: auto;
 }
 
 .analog-bezel-shadow {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .analog-bezel {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: var(--bezel-outer);
   padding: 3.5%;
@@ -304,11 +313,13 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .analog-dial-rim {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: var(--bezel-ring);
   padding: 2.5%;
@@ -316,12 +327,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .clock-svg {
   width: 100%;
   height: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
+  display: block;
   overflow: visible;
   filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
 }
@@ -987,6 +1001,8 @@ body.hide-seconds .sec-element {
     padding: 1rem;
   }
   .analog-card {
+    width: min(85vw, 45vh);
+    height: min(85vw, 45vh);
     max-width: 380px;
     max-height: 380px;
   }
