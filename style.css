@@ -891,6 +891,7 @@ body.hide-seconds .sec-element {
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group input[type="password"],
+.form-group input[type="time"],
 .form-group select {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -899,6 +900,10 @@ body.hide-seconds .sec-element {
   padding: 0.55rem 0.75rem;
   font-size: 0.9rem;
   outline: none;
+}
+
+.form-group input[type="time"] {
+  color-scheme: dark;
 }
 
 .form-group input:focus,

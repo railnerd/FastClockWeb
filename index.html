@@ -265,6 +265,21 @@
             </div>
 
             <div class="form-group span-2">
+              <label for="setClockTimeInput">Fast Clock Time</label>
+              <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <input type="time" id="setClockTimeInput" step="60" style="width:auto; min-width:130px;">
+                <button type="button" class="btn btn-secondary" id="btnApplyClockTime" style="padding:0.45rem 1rem;">
+                  Set Time
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnRealTimeSync" style="padding:0.45rem 0.85rem;" title="Synchronize fast clock to current real time">
+                  Current Real Time
+                </button>
+                <span id="setTimeFeedback" style="font-size:0.82rem; font-weight:600; color:var(--accent-gold);"></span>
+              </div>
+              <small style="margin-top:0.15rem;">Sets fast clock time and broadcasts <code>SET HH:MM:00</code> to MQTT broker.</small>
+            </div>
+
+            <div class="form-group span-2">
               <label>Fast Clock Operating State</label>
               <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                 <button type="button" class="btn btn-secondary" id="btnToggleClockState" style="width:auto; padding:0.45rem 1rem;">

@@ -199,6 +199,10 @@
     elements.ledColorFormGroup = document.getElementById('ledColorFormGroup');
     elements.digitalSecondsFormGroup = document.getElementById('digitalSecondsFormGroup');
     elements.defaultRatio = document.getElementById('defaultRatio');
+    elements.setClockTimeInput = document.getElementById('setClockTimeInput');
+    elements.btnApplyClockTime = document.getElementById('btnApplyClockTime');
+    elements.btnRealTimeSync = document.getElementById('btnRealTimeSync');
+    elements.setTimeFeedback = document.getElementById('setTimeFeedback');
     elements.btnToggleClockState = document.getElementById('btnToggleClockState');
     elements.showMontgomeryNumbers = document.getElementById('showMontgomeryNumbers');
     elements.showCanadianInner24 = document.getElementById('showCanadianInner24');
@@ -584,6 +588,60 @@
     } catch (err) {
       console.warn(`Failed to publish rate to ${cmdTopic}:`, err);
     }
+  }
+
+  function publishTimeToBroker(timeDate) {
+    if (!pahoClient || !isConnected) {
+      console.log('Not connected to MQTT; time updated locally only');
+      return;
+    }
+
+    const prefix = getTopicPrefix();
+    const cmdTopic = `${prefix}/cmd`;
+    const hh = String(timeDate.getHours()).padStart(2, '0');
+    const mm = String(timeDate.getMinutes()).padStart(2, '0');
+    const ss = String(timeDate.getSeconds()).padStart(2, '0');
+    const timeStr = `${hh}:${mm}:${ss}`;
+    const cmdPayload = `SET ${timeStr}`;
+
+    try {
+      const msg = new Paho.MQTT.Message(cmdPayload);
+      msg.destinationName = cmdTopic;
+      msg.qos = 0;
+      pahoClient.send(msg);
+      console.log(`Published to broker on ${cmdTopic}: ${cmdPayload}`);
+
+      if (elements.connFeedback) {
+        elements.connFeedback.textContent = `Pushed time ${timeStr} to ${cmdTopic}`;
+        elements.connFeedback.style.color = '#22c55e';
+      }
+    } catch (err) {
+      console.warn(`Failed to publish time to ${cmdTopic}:`, err);
+    }
+  }
+
+  function handleApplyTimeInput(feedbackMsg = null) {
+    if (!elements.setClockTimeInput || !elements.setClockTimeInput.value) return;
+    const parts = elements.setClockTimeInput.value.split(':');
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return;
+
+    const targetDate = getCurrentFastTime();
+    targetDate.setHours(h, m, 0, 0);
+
+    applyNewTime(targetDate);
+    updateHandPositions(targetDate);
+    publishTimeToBroker(targetDate);
+
+    if (elements.setTimeFeedback) {
+      elements.setTimeFeedback.textContent = feedbackMsg || `Time set to ${elements.setClockTimeInput.value}!`;
+      elements.setTimeFeedback.style.color = '#22c55e';
+      setTimeout(() => {
+        if (elements.setTimeFeedback) elements.setTimeFeedback.textContent = '';
+      }, 3500);
+    }
+    elements.setClockTimeInput.dataset.original = elements.setClockTimeInput.value;
   }
 
   /**
@@ -1082,6 +1140,44 @@
       });
     }
 
+    // Set Fast Clock Time in Modal
+    if (elements.btnApplyClockTime) {
+      elements.btnApplyClockTime.addEventListener('click', () => {
+        handleApplyTimeInput();
+      });
+    }
+
+    if (elements.btnRealTimeSync) {
+      elements.btnRealTimeSync.addEventListener('click', () => {
+        const realNow = new Date();
+        const hh = String(realNow.getHours()).padStart(2, '0');
+        const mm = String(realNow.getMinutes()).padStart(2, '0');
+        if (elements.setClockTimeInput) {
+          elements.setClockTimeInput.value = `${hh}:${mm}`;
+          elements.setClockTimeInput.dataset.original = `${hh}:${mm}`;
+        }
+        applyNewTime(realNow);
+        updateHandPositions(realNow);
+        publishTimeToBroker(realNow);
+        if (elements.setTimeFeedback) {
+          elements.setTimeFeedback.textContent = `Synced to real time (${hh}:${mm})!`;
+          elements.setTimeFeedback.style.color = '#22c55e';
+          setTimeout(() => {
+            if (elements.setTimeFeedback) elements.setTimeFeedback.textContent = '';
+          }, 3500);
+        }
+      });
+    }
+
+    if (elements.setClockTimeInput) {
+      elements.setClockTimeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleApplyTimeInput();
+        }
+      });
+    }
+
     // Modal Toggle Fast Clock State Button (Pause / Resume)
     if (elements.btnToggleClockState) {
       elements.btnToggleClockState.addEventListener('click', () => {
@@ -1281,6 +1377,16 @@
     elements.timeFormatSelect.value = settings.timeFormat;
     if (elements.showSecondsCheck) elements.showSecondsCheck.checked = settings.showSeconds;
     elements.defaultRatio.value = String(settings.clockRate);
+    if (elements.setClockTimeInput) {
+      const nowFast = getCurrentFastTime();
+      const hh = String(nowFast.getHours()).padStart(2, '0');
+      const mm = String(nowFast.getMinutes()).padStart(2, '0');
+      elements.setClockTimeInput.value = `${hh}:${mm}`;
+      elements.setClockTimeInput.dataset.original = `${hh}:${mm}`;
+    }
+    if (elements.setTimeFeedback) {
+      elements.setTimeFeedback.textContent = '';
+    }
     elements.showMontgomeryNumbers.checked = settings.showMontgomery;
     elements.showCanadianInner24.checked = settings.showInner24;
 
@@ -1318,6 +1424,10 @@
 
     clockState.rate = settings.clockRate;
     updateRateBadge(settings.clockRate);
+
+    if (elements.setClockTimeInput && elements.setClockTimeInput.value && elements.setClockTimeInput.value !== elements.setClockTimeInput.dataset.original) {
+      handleApplyTimeInput();
+    }
 
     saveSettings();
   }
