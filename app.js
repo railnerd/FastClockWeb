@@ -600,8 +600,7 @@
     const cmdTopic = `${prefix}/cmd`;
     const hh = String(timeDate.getHours()).padStart(2, '0');
     const mm = String(timeDate.getMinutes()).padStart(2, '0');
-    const ss = String(timeDate.getSeconds()).padStart(2, '0');
-    const timeStr = `${hh}:${mm}:${ss}`;
+    const timeStr = `${hh}:${mm}`;
     const cmdPayload = `SET ${timeStr}`;
 
     try {
