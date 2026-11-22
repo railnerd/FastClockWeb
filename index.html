@@ -265,9 +265,9 @@
             </div>
 
             <div class="form-group span-2">
-              <label for="setClockTimeInput">Fast Clock Time</label>
+              <label for="setClockTimeInput">Fast Clock Time (24-Hour / HH:MM)</label>
               <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-                <input type="time" id="setClockTimeInput" step="60" style="width:auto; min-width:130px;">
+                <input type="text" id="setClockTimeInput" placeholder="14:30" maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:110px; text-align:center; font-family:monospace; font-size:1.05rem; letter-spacing:0.05em;">
                 <button type="button" class="btn btn-secondary" id="btnApplyClockTime" style="padding:0.45rem 1rem;">
                   Set Time
                 </button>
@@ -276,7 +276,7 @@
                 </button>
                 <span id="setTimeFeedback" style="font-size:0.82rem; font-weight:600; color:var(--accent-gold);"></span>
               </div>
-              <small style="margin-top:0.15rem;">Sets fast clock time and broadcasts <code>SET HH:MM:00</code> to MQTT broker.</small>
+              <small style="margin-top:0.15rem;">Enter 24h time (e.g. <code>14:30</code> or <code>1430</code>) to broadcast <code>SET HH:MM:00</code> to MQTT broker.</small>
             </div>
 
             <div class="form-group span-2">

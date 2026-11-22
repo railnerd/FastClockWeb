@@ -620,12 +620,62 @@
     }
   }
 
+  function parse24HourTime(str) {
+    if (!str || typeof str !== 'string') return null;
+    const clean = str.trim().toUpperCase();
+
+    // 1. Standard "HH:MM" or "HH:MM:SS" (e.g. "14:30", "08:15", "14:30:00", "2:30 PM")
+    const colonMatch = clean.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$/i);
+    if (colonMatch) {
+      let h = parseInt(colonMatch[1], 10);
+      const m = parseInt(colonMatch[2], 10);
+      const ampm = colonMatch[4] ? colonMatch[4].toUpperCase() : null;
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+        return { h, m };
+      }
+    }
+
+    // 2. Military / railroad 3 or 4 digit notation without colon (e.g. "1430", "0830", "830")
+    const milMatch = clean.match(/^(\d{1,2})(\d{2})$/);
+    if (milMatch) {
+      const h = parseInt(milMatch[1], 10);
+      const m = parseInt(milMatch[2], 10);
+      if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+        return { h, m };
+      }
+    }
+
+    // 3. Single or double digit hour only (e.g. "14" -> 14:00, "8" -> 08:00)
+    const hourOnlyMatch = clean.match(/^(\d{1,2})$/);
+    if (hourOnlyMatch) {
+      const h = parseInt(hourOnlyMatch[1], 10);
+      if (h >= 0 && h < 24) {
+        return { h, m: 0 };
+      }
+    }
+
+    return null;
+  }
+
   function handleApplyTimeInput(feedbackMsg = null) {
     if (!elements.setClockTimeInput || !elements.setClockTimeInput.value) return;
-    const parts = elements.setClockTimeInput.value.split(':');
-    const h = parseInt(parts[0], 10);
-    const m = parseInt(parts[1], 10);
-    if (isNaN(h) || isNaN(m)) return;
+    const parsed = parse24HourTime(elements.setClockTimeInput.value);
+    if (!parsed) {
+      if (elements.setTimeFeedback) {
+        elements.setTimeFeedback.textContent = 'Invalid time (use 24h e.g. 14:30 or 1430)';
+        elements.setTimeFeedback.style.color = '#ef4444';
+        setTimeout(() => {
+          if (elements.setTimeFeedback) elements.setTimeFeedback.textContent = '';
+        }, 3500);
+      }
+      return;
+    }
+
+    const { h, m } = parsed;
+    const formatted24 = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    elements.setClockTimeInput.value = formatted24;
 
     const targetDate = getCurrentFastTime();
     targetDate.setHours(h, m, 0, 0);
@@ -635,13 +685,13 @@
     publishTimeToBroker(targetDate);
 
     if (elements.setTimeFeedback) {
-      elements.setTimeFeedback.textContent = feedbackMsg || `Time set to ${elements.setClockTimeInput.value}!`;
+      elements.setTimeFeedback.textContent = feedbackMsg || `Time set to ${formatted24}!`;
       elements.setTimeFeedback.style.color = '#22c55e';
       setTimeout(() => {
         if (elements.setTimeFeedback) elements.setTimeFeedback.textContent = '';
       }, 3500);
     }
-    elements.setClockTimeInput.dataset.original = elements.setClockTimeInput.value;
+    elements.setClockTimeInput.dataset.original = formatted24;
   }
 
   /**
@@ -1174,6 +1224,12 @@
         if (e.key === 'Enter') {
           e.preventDefault();
           handleApplyTimeInput();
+        }
+      });
+      elements.setClockTimeInput.addEventListener('blur', () => {
+        const parsed = parse24HourTime(elements.setClockTimeInput.value);
+        if (parsed) {
+          elements.setClockTimeInput.value = `${String(parsed.h).padStart(2, '0')}:${String(parsed.m).padStart(2, '0')}`;
         }
       });
     }
