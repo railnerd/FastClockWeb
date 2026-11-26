@@ -1,0 +1,5 @@
+{
+  "name": "FastClock Web",
+  "description": "Railroad standard Montgomery dial and digital dispatch fast clock synchronized over MQTT.",
+  "icon": "🕰️"
+}
