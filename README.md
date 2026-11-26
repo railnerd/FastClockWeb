@@ -1,50 +1,38 @@
-# 🚂 FastClockWeb
+# FastClockWeb
 
-A high-visibility, large-format Railroad Standard Fast Clock and Digital Dispatch display for model railroads, dispatch offices, and train rooms. Connects to your local MQTT broker using the **Eclipse Paho JavaScript MQTT client** over WebSockets.
-
----
-
-## ✨ Features
-
-- **Traditional Railroad Standard Clock**:
-  - **Montgomery Safety Dial**: Faithful recreation of the 1906 Henry S. Montgomery railroad dial with all 60 individual minute numerals along the outer chapter ring (5-minute markers highlighted in red).
-  - **Canadian / Military 24-Hour Ring**: Inner red 13–24 numerals for railroad operating timetables.
-  - **Classic Railroad Spade Hands**: Heavy spade hour hand, tapered whip minute hand, and counterweighted red sweeping second hand.
-  - **Authentic Station Cases**: Vintage Station (Wood & Brass), Classic Railroad Enamel, Dispatcher Night (amber glow for dark train rooms), and Modern High-Contrast.
-  - **Smooth 60 FPS Sweep or Stepped Tick**: Selectable in settings.
-
-- **Digital Dispatch Clock**:
-  - Large LED readout styled after authentic CTC dispatching boards.
-  - Selectable LED colors: Railroad Signal Red, Dispatcher Amber, Highball Green, Ice Blue, and Cool White.
-  - 12-Hour (AM/PM) or 24-Hour Military/Railroad standard time.
-  - Fast clock ratio indicator (e.g. `1.0x`, `4.0x`, `PAUSED`).
-  - Clean date banner (live MQTT telemetry is neatly organized in Settings).
-
-- **Flexible Display Layouts**:
-  - **Both**: Side-by-side (widescreen) or stacked (portrait/tablets).
-  - **Railroad Only**: Fills the entire screen with the analog dial.
-  - **Digital Only**: Fills the entire screen with the digital dispatch readout.
-  - **Fullscreen Mode**: Press <kbd>F</kbd> or click the fullscreen button to hide all browser chrome for layout fascia screens, wall TVs, or tablets.
-
-- **Eclipse Paho MQTT Client**:
-  - Connects directly from the browser to your local MQTT broker via WebSockets (`ws://` or `wss://`).
-  - **Zero Configuration Required**: Works out of the box with built-in defaults—no `config.js` required.
-  - **Serving Host Default & Fallback**:
-    1. Primary host configured in `config.js` or in the Settings modal
-    2. Host where the page is being served (`window.location.hostname`) if the primary host cannot be reached
-  - **Bidirectional FastClock Synchronization**:
-    - Automatically discovers and subscribes to `{prefix}/time`, `{prefix}/rate`, `{prefix}/state`, and `{prefix}/cmd`.
-    - Handles incoming broker rate and run/stop state changes seamlessly without time jumping.
-    - Pushes rate changes (`RATE <multiplier>`) back to `{prefix}/cmd` when adjusted in the UI or by clicking the rate badge.
-  - Automatic reconnection with backoff.
+A large-format Railroad Standard Fast Clock and Digital Dispatch display for model railroads, dispatch offices, and train rooms. It runs completely in the browser with no build step and connects to your local MQTT broker over WebSockets via **Eclipse Paho MQTT**.
 
 ---
 
-## 🚀 Quick Start
+## Features
 
-FastClockWeb is a **100% client-side, zero-dependency static web application**.
+### Analog Railroad Clock
+- **Montgomery Safety Dial**: Recreation of the 1906 Henry S. Montgomery dial with individual 1–60 minute numerals along the outer chapter ring (5-minute markers highlighted in red).
+- **Canadian / Military 24-Hour Ring**: Inner red 13–24 numerals for timetable operations.
+- **Classic Railroad Hands**: Spade hour hand, tapered whip minute hand, and counterweighted red sweeping second hand.
+- **Station Cases & Motion**: Four themes (*Vintage Station*, *Classic Railroad Enamel*, *Dispatcher Night*, *Modern High-Contrast*) with selectable 60 FPS continuous sweep or 1-second stepped motion.
+- **Paused State**: Hands freeze in place when the fast clock is stopped.
 
-Simply open [`index.html`](index.html) directly in any web browser, or host it on any static web server (Nginx, Apache, Caddy, GitHub Pages, or a local server).
+### Digital Dispatch Clock
+- **Clean LED Readout**: High-contrast 7-segment style display (`DSEG7Classic`) inside a distraction-free bezel.
+- **5 LED Colors**: Railroad Signal Red, Dispatcher Amber, Highball Green, Ice Blue, and Cool White.
+- **12-Hour & 24-Hour Modes**: Displays `AM`/`PM` in 12-hour mode, or pure digits without extra badges in 24-hour railroad mode, with optional `:SS` seconds.
+
+### Display & Controls
+- **Flexible Layouts**: Side-by-side (**Both**), **Railroad Standard Clock Only**, or **Digital Display Only** (automatically stacks on portrait screens and tablets).
+- **Auto-Hiding Controls**: Top-right floating buttons fade out after 4 seconds of inactivity and wake on tap, click, mouse movement, or keypress. When the clock is paused, the glowing `⏸` indicator stays visible as an operational reminder.
+- **Fullscreen Ready**: Supports desktop fullscreen (<kbd>F</kbd>) and edge-to-edge iPad/tablet fullscreen (`viewport-fit=cover`).
+- **Organized Settings Dialog**: **Clock Options** opens first by default, followed by **MQTT Connection**, with collapsible sections for secondary display and advanced connection options.
+
+### MQTT Synchronization
+- **Zero-Config Defaults**: Connects automatically without a `config.js` file, falling back to `window.location.hostname` on port `9001` if a configured host is unreachable.
+- **Bidirectional Control**: Subscribes to `{prefix}/time`, `{prefix}/rate`, `{prefix}/state`, and `{prefix}/cmd`, and pushes `START`, `STOP`, `RATE`, and `SET` commands back to `{prefix}/cmd` from Settings.
+
+---
+
+## Quick Start
+
+FastClockWeb is a 100% client-side static web application. Open [`index.html`](index.html) directly in a browser or serve the folder from any static web server (Nginx, Apache, Caddy, or GitHub Pages).
 
 ```bash
 # macOS
@@ -56,57 +44,12 @@ xdg-open index.html
 
 ---
 
-## ⚙️ Configuration File (`config.js`, Optional)
+## Mosquitto / Broker Setup
 
-**No configuration file is required!** FastClockWeb automatically connects using sensible defaults:
-- **Broker Host**: Defaults to where the page is served (`window.location.hostname`).
-- **Port**: `9001` (standard WebSocket port)
-- **Topic**: `layout/clock/time`
-
-If you want to customize your defaults permanently, copy `config.example.js` to create your local `config.js`:
-
-```bash
-cp config.example.js config.js
-```
-
-You can configure your broker host, WebSocket port, topic, and default preferences directly in [`config.js`](config.js):
-
-```javascript
-window.FASTCLOCK_CONFIG = {
-  // MQTT Broker hostname or LAN IP (leave empty '' to default to where the page is served)
-  mqttHost: '',
-
-  // WebSocket port on your MQTT broker (Mosquitto default is 9001)
-  mqttPort: 9001,
-
-  // WebSocket path (usually empty '' or '/mqtt')
-  mqttPath: '',
-
-  // MQTT Topic to subscribe to
-  mqttTopic: 'layout/clock/time',
-
-  // Use SSL / TLS (wss://)
-  mqttUseSSL: false,
-
-  // Optional authentication
-  mqttUsername: '',
-  mqttPassword: ''
-};
-```
-
-You can also adjust these settings dynamically at any time using the in-browser **Settings (⚙)** modal.
-
----
-
-## 📡 MQTT Configuration
-
-### Mosquitto Broker Setup
-Web browsers require MQTT over WebSockets. If you are using **Eclipse Mosquitto**, ensure your `mosquitto.conf` has a WebSocket listener enabled.
-
-Add the following to `/etc/mosquitto/mosquitto.conf` (or `/opt/homebrew/etc/mosquitto/mosquitto.conf` on macOS):
+Browsers require MQTT over WebSockets (`ws://` or `wss://`). If you use **Eclipse Mosquitto**, enable a WebSocket listener in `/etc/mosquitto/mosquitto.conf` (or `/opt/homebrew/etc/mosquitto/mosquitto.conf` on macOS):
 
 ```conf
-# Standard MQTT TCP port for layout hardware / JMRI / Node-RED
+# Standard MQTT TCP port for layout hardware / JMRI / FastClock server
 listener 1883
 allow_anonymous true
 
@@ -116,7 +59,8 @@ protocol websockets
 allow_anonymous true
 ```
 
-Restart Mosquitto:
+Restart Mosquitto after editing:
+
 ```bash
 # macOS Homebrew
 brew services restart mosquitto
@@ -125,95 +69,87 @@ brew services restart mosquitto
 sudo systemctl restart mosquitto
 ```
 
-### In FastClockWeb Settings
-Click the **Gear (⚙)** icon in the upper-right corner of FastClockWeb:
-- **Broker Host / IP**: Defaults to where the page is being served (or LAN IP/`localhost`)
-- **WebSocket Port**: `9001`
-- **Topic**: `layout/clock/time` (or your custom topic)
-- Click **"Save & Connect"**
+In FastClockWeb, click **Settings (⚙)** &rarr; **MQTT Connection**, verify the **Broker Host / IP**, **MQTT Topic**, and **WebSocket Port** (`9001`), and click **Connect MQTT** (or **Save & Close**).
 
 ---
 
-## 📨 FastClock Server & MQTT Protocol
+## MQTT Protocol & Supported Formats
 
-FastClockWeb is fully compatible with [`FastClock`](https://github.com/railnerd/FastClock) (`fastclock.py`) as well as generic MQTT fast clock publishers.
+FastClockWeb is compatible with [`FastClock`](https://github.com/railnerd/FastClock) (`fastclock.py`), JMRI, and generic MQTT time publishers.
 
 ### Topic Structure
-FastClockWeb derives the topic prefix from your configured time topic (e.g. `layout/clock` from `layout/clock/time`) and subscribes to:
-- `{prefix}/time` — Current fast clock time (`HH:MM` or `HH:MM:SS`, retained)
-- `{prefix}/rate` — Speed multiplier (`1.00`, `4.00`, `8.00`, retained)
-- `{prefix}/state` — Clock status (`ACTIVE` or `INACTIVE`, retained)
-- `{prefix}/cmd` — Command stream (`RATE <multiplier>`, `START`, `STOP`, `SET <HH:MM>`)
 
-### Bidirectional Rate & State Control
-- **Broker -> Display**: When the broker publishes on `{prefix}/rate` or `{prefix}/state` (or `{prefix}/cmd`), FastClockWeb immediately updates its speed and running/stopped state:
-  - **Screen Controls Indicator**: When the clock is stopped, a glowing `⏸` indicator icon appears alongside the Fullscreen and Settings icons in the top-right corner. Clicking it opens Settings.
-  - **Analog Clock**: Clock hands freeze completely and cease animation while the clock is stopped; the dial face remains 100% authentic and unobstructed.
-  - **Digital Clock**: Colons (`:`) stop blinking and stay solid, and the digital suffix displays `PAUSED`.
-  - The internal time-base smoothly re-anchors on the fly so clock hands never jump or stutter when resumed or re-rated.
-- **Display -> Broker**:
-  - The **`Pause / Resume Fast Clock`** toggle button inside the Settings dialog sends `START` or `STOP` to `{prefix}/cmd` on the broker.
-  - Selecting a ratio in the Settings dialog sends `RATE <multiplier>` to `{prefix}/cmd`.
-  - All connected displays and the FastClock server synchronize instantly.
+FastClockWeb derives `{prefix}` from your configured time topic (for example, `layout/clock` from `layout/clock/time`):
 
----
+| Topic | Direction | Payload | Description |
+| :--- | :--- | :--- | :--- |
+| `{prefix}/time` | Broker &rarr; Display | `HH:MM` or `HH:MM:SS` | Current simulated fast time (retained) |
+| `{prefix}/rate` | Broker &rarr; Display | Float (e.g. `4.00`) | Fast clock speed multiplier (retained) |
+| `{prefix}/state` | Broker &rarr; Display | `ACTIVE` / `INACTIVE` | Running or stopped state (retained) |
+| `{prefix}/cmd` | Bidirectional | `START`, `STOP`, `RATE <n>`, `SET <HH:MM>` | Control commands |
 
-## 📨 Supported MQTT Message Formats
+### Supported Time Payloads
 
-FastClockWeb automatically detects and parses a wide variety of time formats:
-
-### 1. FastClock Server Protocol (Standard)
-- `{prefix}/time`: `"14:35"` or `"14:35:00"`
-- `{prefix}/rate`: `"4.00"` or `"1.00"`
-- `{prefix}/state`: `"ACTIVE"` or `"INACTIVE"`
-
-### 2. Fast Clock JSON
-```json
-{"time": "14:35:00", "rate": 4.0, "status": "running"}
-```
-- `rate` or `ratio`: Fast clock ratio multiplier (e.g. `4.0` for 4:1 time, `1.0` for real-time).
-- `status`: `"running"` or `"paused"`.
-- Hand movement interpolates continuously between updates.
-
-### 3. Discrete Time Values
-```json
-{"hours": 10, "minutes": 45, "seconds": 0, "rate": 4.0}
-```
-
-### 3. Plain Text Strings
-```text
-14:35:00
-```
-or
-```text
-02:35 PM
-```
-
-### 4. Unix Epoch Timestamps
-Seconds or milliseconds:
-```text
-1732160000
-```
-
-### 5. ISO 8601 Strings
-```text
-2026-11-20T14:35:00
-```
+| Format | Example | Notes |
+| :--- | :--- | :--- |
+| Plain text time | `14:35`, `14:35:00`, `02:35 PM` | Standard FastClock / JMRI format |
+| Fast Clock JSON | `{"time": "14:35:00", "rate": 4.0, "status": "running"}` | Also accepts `ratio` and `"paused"` |
+| Discrete JSON | `{"hours": 10, "minutes": 45, "seconds": 0, "rate": 4.0}` | Individual time fields |
+| Unix epoch | `1732160000` | Seconds or milliseconds |
+| ISO 8601 | `2026-11-20T14:35:00` | Standard ISO timestamp |
 
 ---
 
-## ⌨️ Keyboard Shortcuts & Controls
+## Configuration (`config.js`, Optional)
 
-- <kbd>F</kbd> : Toggle Fullscreen
-- <kbd>Esc</kbd> : Close Settings dialog
-- **Main Screen**: Clean display focused purely on the clocks, with subtle Fullscreen and Settings (⚙) icons in the upper corner.
-- **Settings (⚙)**: Configure broker connection, display view style (Both/Railroad/Digital), station theme, LED color, 12H/24H format, seconds toggle, and dial features.
+No configuration file is required. Built-in defaults connect to `window.location.hostname` on port `9001` and subscribe to `layout/clock/time`.
+
+To customize permanent defaults, copy [`config.example.js`](config.example.js) to `config.js`:
+
+```bash
+cp config.example.js config.js
+```
+
+```javascript
+window.FASTCLOCK_CONFIG = {
+  mqttHost: '',                  // Empty defaults to the serving host
+  mqttPort: 9001,                // Mosquitto WebSocket port
+  mqttPath: '',                  // Optional WS path (e.g. '/mqtt')
+  mqttTopic: 'layout/clock/time',
+  mqttUseSSL: false,
+  mqttUsername: '',
+  mqttPassword: ''
+};
+```
+
+See [`config.example.js`](config.example.js) for additional display defaults (`defaultView`, `defaultTheme`, `defaultTimeFormat`, `defaultHandMotion`, and `defaultClockRate`).
 
 ---
 
-## 🛠️ File Structure
+## Controls & Keyboard Shortcuts
 
-- `index.html` — Main user interface and SVG railroad clock dial.
-- `style.css` — Responsive styles, station themes, and glowing LED display effects.
-- `app.js` — Fast clock engine, SVG dial rendering, and Eclipse Paho MQTT client logic.
-- `paho-mqtt.js` — Eclipse Paho JavaScript client library (100% offline).
+| Control / Key | Action |
+| :--- | :--- |
+| <kbd>F</kbd> or **Fullscreen (`⛶`)** | Toggle fullscreen display |
+| **Settings (`⚙`)** | Open Clock Options & MQTT Connection settings |
+| **Stopped Indicator (`⏸`)** | Appears when the clock is paused; click to open Settings |
+| <kbd>Esc</kbd> | Close the Settings dialog |
+
+### Setting Time & Rate in Settings
+Under **Clock Options**:
+- **Fast Clock Time (24-Hour / HH:MM)**: Enter 24-hour (`14:30`) or military (`1430`) time and click **Set Time** (or press <kbd>Enter</kbd>) to update locally and broadcast `SET HH:MM` to `{prefix}/cmd`. Click **Current Real Time** to sync to your device's clock.
+- **Fast Clock Ratio**: Selecting a new ratio pushes `RATE <multiplier>` to `{prefix}/cmd`.
+- **Pause / Resume Fast Clock**: Sends `STOP` or `START` to `{prefix}/cmd`.
+
+---
+
+## Project Structure
+
+| File / Folder | Purpose |
+| :--- | :--- |
+| [`index.html`](index.html) | Main clock layout, SVG dial face, and Settings dialog |
+| [`style.css`](style.css) | Responsive layouts, station themes, LED styling, and auto-hide rules |
+| [`app.js`](app.js) | Fast clock engine, SVG dial markings, idle timer, and Paho MQTT client |
+| [`config.example.js`](config.example.js) | Optional template for creating a local `config.js` |
+| [`paho-mqtt.js`](paho-mqtt.js) | Bundled Eclipse Paho JavaScript MQTT client (offline-ready) |
+| `fonts/` | Local `DSEG7Classic` WOFF2 web fonts for the digital readout |
