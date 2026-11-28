@@ -143,6 +143,24 @@ Under **Clock Options**:
 
 ---
 
+## Hosting with `local-web-server` & Docker
+
+FastClockWeb can be hosted under a subpath (such as `/fastclock/`) alongside other layout apps using [`local-web-server`](https://github.com/railnerd/local-web-server):
+
+```bash
+python3 ../local-web-server/local_web_server.py --mount /fastclock=. --port 8000
+```
+
+To build an asset-only Docker image for compositing:
+
+```bash
+docker build --target assets -t fastclock-web:assets .
+```
+
+See [`local-web-server/DEPLOY.md`](https://github.com/railnerd/local-web-server/blob/main/DEPLOY.md) for Raspberry Pi (`systemd` or Docker Compose) setup instructions.
+
+---
+
 ## Project Structure
 
 | File / Folder | Purpose |
@@ -151,5 +169,7 @@ Under **Clock Options**:
 | [`style.css`](style.css) | Responsive layouts, station themes, LED styling, and auto-hide rules |
 | [`app.js`](app.js) | Fast clock engine, SVG dial markings, idle timer, and Paho MQTT client |
 | [`config.example.js`](config.example.js) | Optional template for creating a local `config.js` |
+| [`site.json`](site.json) | App metadata (`name`, `description`, `icon`) for the `local-web-server` landing page |
+| [`Dockerfile`](Dockerfile) | Multi-target asset/standalone image definition for container composition |
 | [`paho-mqtt.js`](paho-mqtt.js) | Bundled Eclipse Paho JavaScript MQTT client (offline-ready) |
 | `fonts/` | Local `DSEG7Classic` WOFF2 web fonts for the digital readout |
